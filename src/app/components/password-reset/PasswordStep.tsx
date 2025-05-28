@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-import { useUser } from "@/app/context/UserContext"  // Importa o contexto do usuário
+import { useUser } from "@/app/context/UserContext"
 
 const passwordSchema = z
   .object({
