@@ -5,28 +5,41 @@ import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
 import Link from "next/link"
 import Image from "next/image"
+import { z } from "zod"
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+// Importe seu Alert (com todos os slots)
+// Você pode usar somente <Alert> ou adicionar <AlertTitle> e <AlertDescription>
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+
+// Defina o schema Zod pra validação
+const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "A senha precisa ter ao menos 6 caracteres"),
+})
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [errorMsg, setErrorMsg] = useState("")
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError("")
+    setErrorMsg("")
 
+    // 1) Validação local com Zod
+    const validation = loginSchema.safeParse({ email, password })
+    if (!validation.success) {
+      setErrorMsg(validation.error.errors[0].message)
+      return
+    }
 
+    // 2) Tenta autenticar com NextAuth
     const res: any = await signIn("credentials", {
       redirect: false,
       email,
@@ -34,9 +47,8 @@ export default function LoginPage() {
     })
 
     if (res?.error) {
-      setError("Credenciais incorretas")
+      setErrorMsg("Credenciais incorretas")
     } else {
-  
       router.push("/home")
     }
   }
@@ -63,44 +75,46 @@ export default function LoginPage() {
 
         <CardContent className="pt-8 pb-6 bg-white px-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <label className="flex flex-col">
-              <span className="text-gray-700 mb-1">Email</span>
-              <input
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="usuario@exemplo.com"
               />
-            </label>
+            </div>
 
-            <label className="flex flex-col">
-              <span className="text-gray-700 mb-1">Senha</span>
-              <input
+            <div>
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="••••••••"
               />
-            </label>
+            </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {/* Se houver mensagem de erro, exibe o Alert variant="destructive" */}
+            {errorMsg && (
+              <Alert variant="destructive">
+                <AlertTitle>Erro</AlertTitle>
+                <AlertDescription>{errorMsg}</AlertDescription>
+              </Alert>
+            )}
 
-            <Button
-              type="submit"
-              className="mt-4 bg-blue-500 text-white hover:bg-blue-600 transition"
-            >
+            <Button type="submit" className="mt-4 w-full">
               Entrar
             </Button>
           </form>
         </CardContent>
 
         <CardFooter className="flex flex-col items-center bg-white pb-6">
-          <Link
-            href="/reset"
-            className="text-md text-[#291F75] hover:underline"
-          >
+          <Link href="/reset" className="text-md text-[#291F75] hover:underline">
             Esqueci minha senha
           </Link>
         </CardFooter>
