@@ -1,12 +1,10 @@
-// /app/login/page.tsx   (ou onde estiver sua rota “/login”)
-
 "use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import Link from "next/link"
 import Image from "next/image"
-import {useUser} from "@/app/context/UserContext"
 
 import {
   Card,
@@ -20,7 +18,6 @@ import { Button } from "@/components/ui/button"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useUser()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -29,11 +26,18 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
 
-    try {
-      await login(email, password)
+
+    const res: any = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    })
+
+    if (res?.error) {
+      setError("Credenciais incorretas")
+    } else {
+  
       router.push("/home")
-    } catch (err: any) {
-      setError(err.message)
     }
   }
 
