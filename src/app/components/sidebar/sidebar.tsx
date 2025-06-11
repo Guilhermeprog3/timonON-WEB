@@ -1,0 +1,118 @@
+"use client"
+import {
+  LayoutDashboard,
+  MessageSquareWarning,
+  Users,
+  Settings,
+  User2,
+  LogOut,
+  ChevronUp,
+} from 'lucide-react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {logoutAction}  from './action';
+
+const items = [
+  {
+    title: 'Dashboard',
+    url: '/home',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Reclamações',
+    url: '/complaint',
+    icon: MessageSquareWarning,
+  },
+  {
+    title: 'Users',
+    url: '/users',
+    icon: Users,
+  },
+  {
+    title: 'Configuração',
+    url: '#',
+    icon: Settings,
+  },
+];
+
+export function AppSidebar() {
+  function touchlogout () {
+    logoutAction();
+  }
+
+  return (
+    <Sidebar>
+      <SidebarContent className="bg-indigo-900 text-white">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <a href={item.url} className="flex items-center gap-3">
+                      <item.icon size={20} />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="bg-indigo-950 border-t border-indigo-800 p-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton className="w-full text-white hover:bg-indigo-800">
+              <div className="flex items-center gap-3">
+                <User2 size={20} />
+                <span className="truncate">Username</span>
+              </div>
+              <ChevronUp size={20} className="ml-auto" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            side="top"
+            align="start"
+            className="w-[var(--radix-dropdown-menu-trigger-width)] bg-slate-50 text-slate-800 rounded-md shadow-lg border border-slate-200"
+          >
+            <DropdownMenuItem asChild>
+              <a
+                href="#"
+                className="flex items-center gap-3 p-2 cursor-pointer hover:bg-slate-200 rounded-sm"
+              >
+                <User2 size={16} />
+                <span>Meu Perfil</span>
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a
+                onClick={() => touchlogout()}
+                className="flex items-center gap-3 p-2 text-red-500 cursor-pointer hover:bg-slate-200 rounded-sm"
+              >
+                <LogOut size={16} />
+                <span >Sair</span>
+              </a>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}

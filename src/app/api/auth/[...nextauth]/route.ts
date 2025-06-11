@@ -15,9 +15,12 @@ export const handlerAuth = NextAuth({
         password: { type: "password" },
       },
       async authorize(credentials: any) {
-        const res = await fetch(`${api}/sessao`, {
+        const res = await fetch(`https://infra-timon-on.onrender.com/admin/login`, {
           method: "POST",
-          body: JSON.stringify(credentials),
+          body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+          }),
           headers: { "Content-type": "application/json" },
         })
         const responseJson = await res.json();

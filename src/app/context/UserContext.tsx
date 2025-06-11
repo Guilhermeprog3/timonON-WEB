@@ -14,7 +14,7 @@ export const UserContext = createContext<UserContextProps>({} as UserContextProp
 export const UserProvider = ({ children }: PropsWithChildren) => {
   const forgotPassword = async (email: string): Promise<{ success: boolean; message: string }> => {
     try {
-      const { data } = await api.post("/auth/forget-password", { email })
+      const { data } = await api.post("restore/send", { email })
       return {
         success: data.success,
         message: data.message,
@@ -29,7 +29,7 @@ export const UserProvider = ({ children }: PropsWithChildren) => {
 
   const validateResetCode = async (code: string, email: string): Promise<boolean> => {
     try {
-      const { data } = await api.post("/auth/verify-code", { email, code })
+      const { data } = await api.post("restore/confirm", { email, code })
       if (!data.success || !data.valid) throw new Error(data.message)
       return true
     } catch (error: any) {
@@ -43,7 +43,7 @@ export const UserProvider = ({ children }: PropsWithChildren) => {
     newPassword: string
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const { data } = await api.post("/auth/reset-password", {
+      const { data } = await api.patch("user", {
         email,
         code,
         newPassword,
