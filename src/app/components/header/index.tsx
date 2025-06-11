@@ -6,7 +6,7 @@ export function Header() {
   return (
     <header className="flex h-16 items-center border-b bg-slate-900 px-6">
       <Link
-        href="/dashboard"
+        href="/home"
         className="flex items-center gap-3 transition-opacity hover:opacity-80"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">
