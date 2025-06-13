@@ -14,7 +14,8 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import type { Complaint, ComplaintFilters } from "@/app/types/complaint"
-import { getComplaintsByFilters, getCategories, getNeighborhoods } from "./action"
+import { getComplaintsByFilters, getCategories} from "./action"
+import { DateRange } from "react-day-picker"
 
 interface ComplaintsListProps {
   initialComplaints: Complaint[]
@@ -39,14 +40,13 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
 
   useEffect(() => {
     async function loadFilterOptions() {
-      const [categoriesData, neighborhoodsData] = await Promise.all([getCategories(), getNeighborhoods()])
+      const [categoriesData, ] = await Promise.all([getCategories()])
       setCategories(categoriesData)
-      setNeighborhoods(neighborhoodsData)
     }
     loadFilterOptions()
   }, [])
 
-  const handleFilterChange = (key: keyof ComplaintFilters, value: any) => {
+  const handleFilterChange = (key: keyof ComplaintFilters, value: string | DateRange | undefined) => { 
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
 

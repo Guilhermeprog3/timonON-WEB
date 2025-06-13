@@ -2,6 +2,7 @@
 
 import React, { createContext, PropsWithChildren, useContext } from "react"
 import { api } from "@/app/service/server"
+import { AxiosError } from "axios"
 
 type UserContextProps = {
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>
@@ -19,11 +20,14 @@ export const UserProvider = ({ children }: PropsWithChildren) => {
         success: data.success,
         message: data.message,
       }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || "Erro ao solicitar recuperação.",
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        return {
+          success: false,
+          message: error.response?.data?.message || "Erro ao solicitar recuperação.",
+        }
       }
+      return { success: false, message: "Ocorreu um erro desconhecido." };
     }
   }
 
@@ -32,8 +36,11 @@ export const UserProvider = ({ children }: PropsWithChildren) => {
       const { data } = await api.post("restore/confirm", { email, code })
       if (!data.success || !data.valid) throw new Error(data.message)
       return true
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Código inválido.")
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+          throw new Error(error.response?.data?.message || "Código inválido.");
+      }
+      throw new Error("Ocorreu um erro desconhecido ao validar o código.");
     }
   }
 
@@ -58,11 +65,14 @@ export const UserProvider = ({ children }: PropsWithChildren) => {
         success: true,
         message: data.message,
       }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || "Erro ao redefinir a senha.",
-      }
+    } catch (error) {
+        if (error instanceof AxiosError && error.response) {
+            return {
+                success: false,
+                message: error.response?.data?.message || "Erro ao redefinir a senha.",
+            }
+        }
+        return { success: false, message: "Ocorreu um erro desconhecido ao redefinir a senha." };
     }
   }
 

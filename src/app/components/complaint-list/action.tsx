@@ -1,92 +1,99 @@
 "use server"
 
-import type { Complaint } from "@/app/types/complaint"
+import { api } from "@/app/service/server";
+import type { Complaint } from "@/app/types/complaint";
+import { cookies } from "next/headers";
 
-const mockComplaints: Complaint[] = [
-  {
-    id: "REC-2023-001",
-    title: "Buraco na Rua Principal",
-    category: "Infraestrutura",
-    neighborhood: "Centro",
-    status: "Pendente",
-    date: "14/05/2023",
-  },
-  {
-    id: "REC-2023-002",
-    title: "Falta de Iluminação na Praça Central",
-    category: "Iluminação",
-    neighborhood: "Parque Piauí",
-    status: "Em Andamento",
-    date: "13/05/2023",
-  },
-  {
-    id: "REC-2023-003",
-    title: "Lixo acumulado na Avenida Brasil",
-    category: "Limpeza",
-    neighborhood: "São Benedito",
-    status: "Resolvido",
-    date: "11/05/2023",
-  },
-  {
-    id: "REC-2023-004",
-    title: "Semáforo com defeito no cruzamento",
-    category: "Infraestrutura",
-    neighborhood: "Centro",
-    status: "Pendente",
-    date: "10/05/2023",
-  },
-  {
-    id: "REC-2023-005",
-    title: "Vazamento de água na Rua das Flores",
-    category: "Saneamento",
-    neighborhood: "Jardim Primavera",
-    status: "Em Andamento",
-    date: "09/05/2023",
-  },
-]
+interface ApiPost {
+  id: string;
+  title: string;
+  creation_date: string;
+  status: "Pendente" | "Em Andamento" | "Resolvido";
+  category: { id: string; name: string };
+  neighborhood: { id: string; name: string };
+}
 
-export async function getComplaints(): Promise<Complaint[]> {
 
-  return mockComplaints
+
+function mapPostToComplaint(post: ApiPost): Complaint {
+  return {
+    id: post.id,
+    title: post.title,
+    category: post.category.name,
+    neighborhood: post.neighborhood.name,
+    status: post.status,
+    date: post.creation_date,
+  };
+}
+
+async function getAuthToken(): Promise<string | undefined> {
+    return (await cookies()).get("JWT")?.value;
 }
 
 export async function getComplaintsByFilters(filters: {
-  search?: string
-  status?: string
-  category?: string
-  neighborhood?: string
+  search?: string;
+  status?: string;
+  category?: string;
+  neighborhood?: string;
 }): Promise<Complaint[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300))
+    const token = await getAuthToken();
+    if (!token) return [];
 
-  let filteredComplaints = [...mockComplaints]
+    let endpoint = "/posts";
+    const params: Record<string, string | number> = {
+        page: 1,
+        pageSize: 20,
+    };
 
-  if (filters.search) {
-    filteredComplaints = filteredComplaints.filter(
-      (complaint) =>
-        complaint.title.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        complaint.id.toLowerCase().includes(filters.search!.toLowerCase()),
-    )
-  }
+    if (filters.category && filters.category !== 'all') {
+        endpoint = `/category/posts-by-name`;
+        params.name = filters.category;
+    } else {
+ 
+        if (filters.search) {
+            params.description = filters.search;
+        }
+        if (filters.status && filters.status !== 'all') {
+            params.status = filters.status;
+        }
+    }
 
-  if (filters.status && filters.status !== "all") {
-    filteredComplaints = filteredComplaints.filter((complaint) => complaint.status === filters.status)
-  }
+    try {
+        const response = await api.get(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+            params,
+        });
 
-  if (filters.category && filters.category !== "all") {
-    filteredComplaints = filteredComplaints.filter((complaint) => complaint.category === filters.category)
-  }
 
-  if (filters.neighborhood && filters.neighborhood !== "all") {
-    filteredComplaints = filteredComplaints.filter((complaint) => complaint.neighborhood === filters.neighborhood)
-  }
+        if (endpoint === '/category/posts-by-name') {
+            const categoryData = response.data[0];
+            const posts = categoryData?.posts || [];
+            return posts.map(mapPostToComplaint);
+        }
 
-  return filteredComplaints
+        return response.data.map(mapPostToComplaint);
+
+    } catch (error) {
+        console.error(`Falha ao buscar reclamações (${endpoint}):`, error);
+        return [];
+    }
+}
+
+export async function getComplaints(): Promise<Complaint[]> {
+    return getComplaintsByFilters({});
 }
 
 export async function getCategories(): Promise<string[]> {
-  return ["Infraestrutura", "Iluminação", "Limpeza", "Saneamento", "Transporte"]
-}
+    const token = await getAuthToken();
+    if (!token) return [];
 
-export async function getNeighborhoods(): Promise<string[]> {
-  return ["Centro", "Parque Piauí", "São Benedito", "Jardim Primavera", "Vila Nova"]
+    try {
+        const response = await api.get("/category", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data.map((category: { id: string, name: string }) => category.name);
+    } catch (error) {
+        console.error("Falha ao buscar as categorias:", error);
+        return [];
+    }
 }

@@ -51,14 +51,14 @@ export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepPro
     setError(undefined)
 
     try {
-      const response = await resetPassword(email, code, values.password)
+      const response = await resetPassword(code, email, values.password)
 
       if (response.success) {
         onSuccess()
       } else {
         setError(response.message)
       }
-    } catch (error) {
+    } catch (_error) { // Corrigido
       setError("Ocorreu um erro ao redefinir sua senha. Tente novamente mais tarde.")
     } finally {
       setIsLoading(false)

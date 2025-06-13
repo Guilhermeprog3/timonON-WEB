@@ -49,8 +49,12 @@ export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
       if (isValid) {
         onSuccess(values.code)
       }
-    } catch (err: any) {
-      setError(err.message || "Código inválido. Verifique e tente novamente.")
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            setError(err.message || "Código inválido. Verifique e tente novamente.")
+        } else {
+            setError("Ocorreu um erro desconhecido.")
+        }
     } finally {
       setIsLoading(false)
     }

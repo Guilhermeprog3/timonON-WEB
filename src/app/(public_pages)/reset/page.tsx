@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -14,7 +13,6 @@ import { SuccessStep } from "@/app/components/password-reset/SucessoStep"
 import { ProgressIndicator } from "@/app/components/password-reset/ProgressIndicator"
 
 const PasswordResetPage = () => {
-  const router = useRouter()
   const [step, setStep] = useState<"email" | "verification" | "password" | "success">("email")
   const [email, setEmail] = useState("")
   const [code, setCode] = useState("")

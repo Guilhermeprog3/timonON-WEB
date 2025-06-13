@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, SignInResponse } from "next-auth/react"
 import Link from "next/link"
 import Image from "next/image"
 import { z } from "zod"
@@ -11,12 +11,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
-// Importe seu Alert (com todos os slots)
-// Você pode usar somente <Alert> ou adicionar <AlertTitle> e <AlertDescription>
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
-// Defina o schema Zod pra validação
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "A senha precisa ter ao menos 6 caracteres"),
@@ -32,15 +28,13 @@ export default function LoginPage() {
     e.preventDefault()
     setErrorMsg("")
 
-    // 1) Validação local com Zod
     const validation = loginSchema.safeParse({ email, password })
     if (!validation.success) {
       setErrorMsg(validation.error.errors[0].message)
       return
     }
 
-    // 2) Tenta autenticar com NextAuth
-    const res: any = await signIn("credentials", {
+    const res: SignInResponse | undefined = await signIn("credentials", {
       redirect: false,
       email,
       password,
@@ -98,8 +92,7 @@ export default function LoginPage() {
                 placeholder="••••••••"
               />
             </div>
-
-            {/* Se houver mensagem de erro, exibe o Alert variant="destructive" */}
+            
             {errorMsg && (
               <Alert variant="destructive">
                 <AlertTitle>Erro</AlertTitle>

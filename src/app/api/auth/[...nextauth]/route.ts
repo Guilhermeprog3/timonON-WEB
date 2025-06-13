@@ -1,7 +1,6 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { cookies } from "next/headers";
-import { api } from "@/app/service/server"
 
 export const handlerAuth = NextAuth({
   pages: {
