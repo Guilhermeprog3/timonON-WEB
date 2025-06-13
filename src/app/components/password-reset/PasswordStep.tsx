@@ -58,7 +58,7 @@ export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepPro
       } else {
         setError(response.message)
       }
-    } catch (_error) { // Corrigido
+    } catch { // Corrigido
       setError("Ocorreu um erro ao redefinir sua senha. Tente novamente mais tarde.")
     } finally {
       setIsLoading(false)

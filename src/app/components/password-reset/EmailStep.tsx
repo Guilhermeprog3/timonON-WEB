@@ -51,7 +51,7 @@ export function EmailStep({ onSuccess }: EmailStepProps) {
       } else {
         setError(response.message)
       }
-    } catch (_err) {
+    } catch { // Corrigido
       setError("Ocorreu um erro ao solicitar a recuperação de senha. Tente novamente mais tarde.")
     } finally {
       setIsLoading(false)
