@@ -13,7 +13,10 @@ export const handlerAuth = NextAuth({
         email: { type: "email" },
         password: { type: "password" },
       },
-      async authorize(credentials: any) {
+      async authorize(credentials: Record<string, string> | undefined) {
+        if (!credentials) {
+            return null;
+        }
         const res = await fetch(`https://infra-timon-on.onrender.com/admin/login`, {
           method: "POST",
           body: JSON.stringify({

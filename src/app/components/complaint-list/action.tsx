@@ -1,7 +1,7 @@
 "use server"
 
 import { api } from "@/app/service/server";
-import type { Complaint } from "@/app/types/complaint";
+import type { Complaint } from "@/app/types/complaint"
 import { cookies } from "next/headers";
 
 interface ApiPost {
@@ -13,14 +13,11 @@ interface ApiPost {
   neighborhood: { id: string; name: string };
 }
 
-
-
 function mapPostToComplaint(post: ApiPost): Complaint {
   return {
     id: post.id,
     title: post.title,
     category: post.category.name,
-    neighborhood: post.neighborhood.name,
     status: post.status,
     date: post.creation_date,
   };
@@ -34,7 +31,6 @@ export async function getComplaintsByFilters(filters: {
   search?: string;
   status?: string;
   category?: string;
-  neighborhood?: string;
 }): Promise<Complaint[]> {
     const token = await getAuthToken();
     if (!token) return [];
@@ -49,7 +45,6 @@ export async function getComplaintsByFilters(filters: {
         endpoint = `/category/posts-by-name`;
         params.name = filters.category;
     } else {
- 
         if (filters.search) {
             params.description = filters.search;
         }
@@ -64,7 +59,6 @@ export async function getComplaintsByFilters(filters: {
             params,
         });
 
-
         if (endpoint === '/category/posts-by-name') {
             const categoryData = response.data[0];
             const posts = categoryData?.posts || [];
@@ -74,7 +68,7 @@ export async function getComplaintsByFilters(filters: {
         return response.data.map(mapPostToComplaint);
 
     } catch (error) {
-        console.error(`Falha ao buscar reclamações (${endpoint}):`, error);
+        console.error(`Falha ao buscar reclamações com filtros (${endpoint}):`, error);
         return [];
     }
 }

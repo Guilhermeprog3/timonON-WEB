@@ -14,7 +14,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import type { Complaint, ComplaintFilters } from "@/app/types/complaint"
-import { getComplaintsByFilters, getCategories} from "./action"
+import { getComplaints, getComplaintsByFilters, getCategories } from "./action"
 import { DateRange } from "react-day-picker"
 
 interface ComplaintsListProps {
@@ -24,14 +24,12 @@ interface ComplaintsListProps {
 export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
   const [complaints, setComplaints] = useState<Complaint[]>(initialComplaints)
   const [categories, setCategories] = useState<string[]>([])
-  const [neighborhoods, setNeighborhoods] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
 
-  const [filters, setFilters] = useState<ComplaintFilters>({
+  const [filters, setFilters] = useState<Omit<ComplaintFilters, 'neighborhood'>>({
     search: "",
     status: "all",
     category: "all",
-    neighborhood: "all",
     dateRange: {
       from: undefined,
       to: undefined,
@@ -40,39 +38,33 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
 
   useEffect(() => {
     async function loadFilterOptions() {
-      const [categoriesData, ] = await Promise.all([getCategories()])
+      const categoriesData = await getCategories();
       setCategories(categoriesData)
     }
     loadFilterOptions()
   }, [])
 
-  const handleFilterChange = (key: keyof ComplaintFilters, value: string | DateRange | undefined) => { 
+  const handleFilterChange = (key: keyof typeof filters, value: string | DateRange | undefined) => {
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
 
     startTransition(async () => {
-      const filteredComplaints = await getComplaintsByFilters({
-        search: newFilters.search,
-        status: newFilters.status === "all" ? undefined : newFilters.status,
-        category: newFilters.category === "all" ? undefined : newFilters.category,
-        neighborhood: newFilters.neighborhood === "all" ? undefined : newFilters.neighborhood,
-      })
+      const filteredComplaints = await getComplaintsByFilters(newFilters)
       setComplaints(filteredComplaints)
     })
   }
 
   const clearFilters = () => {
-    const clearedFilters: ComplaintFilters = {
+    const clearedFilters = {
       search: "",
       status: "all",
       category: "all",
-      neighborhood: "all",
       dateRange: { from: undefined, to: undefined },
     }
     setFilters(clearedFilters)
 
     startTransition(async () => {
-      const allComplaints = await getComplaintsByFilters({})
+      const allComplaints = await getComplaints()
       setComplaints(allComplaints)
     })
   }
@@ -110,7 +102,7 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"> {/* Grid ajustado */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
@@ -142,20 +134,6 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.neighborhood} onValueChange={(value) => handleFilterChange("neighborhood", value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os bairros" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os bairros</SelectItem>
-                {neighborhoods.map((neighborhood) => (
-                  <SelectItem key={neighborhood} value={neighborhood}>
-                    {neighborhood}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -229,7 +207,6 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
                     <TableHead>ID</TableHead>
                     <TableHead>Título</TableHead>
                     <TableHead>Categoria</TableHead>
-                    <TableHead>Bairro</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead>Ações</TableHead>
@@ -241,11 +218,10 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
                       <TableCell className="font-medium text-blue-600">{complaint.id}</TableCell>
                       <TableCell>{complaint.title}</TableCell>
                       <TableCell>{complaint.category}</TableCell>
-                      <TableCell>{complaint.neighborhood}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(complaint.status)}>{complaint.status}</Badge>
                       </TableCell>
-                      <TableCell>{complaint.date}</TableCell>
+                      <TableCell>{new Date(complaint.date).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm">
                           <Trash2 className="h-4 w-4 text-red-500" />
