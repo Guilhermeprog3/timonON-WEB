@@ -27,17 +27,17 @@ const handlerAuth = NextAuth({
               }),
               headers: { "Content-type": "application/json" },
             });
-
+            
             if (!res.ok) {
               console.error("Falha no login com o backend:", res.status);
               return null;
             }
 
             const responseJson = await res.json();
-
+            
             if (responseJson.token) {
               (await cookies()).set("JWT", responseJson.token);
-
+              
               return {
                 id: credentials.email,
                 email: credentials.email,
@@ -52,6 +52,7 @@ const handlerAuth = NextAuth({
       },
     })
   ],
+  secret: process.env.NEXTAUTH_SECRET,
 });
 
 export { handlerAuth as GET, handlerAuth as POST }
