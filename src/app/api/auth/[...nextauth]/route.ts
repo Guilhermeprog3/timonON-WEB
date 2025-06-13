@@ -17,19 +17,37 @@ const handlerAuth = NextAuth({
         if (!credentials) {
             return null;
         }
-        const res = await fetch(`https://infra-timon-on.onrender.com/admin/login`, {
-          method: "POST",
-          body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password,
-          }),
-          headers: { "Content-type": "application/json" },
-        })
-        const responseJson = await res.json();
-        if (res.ok) {
-          (await cookies()).set("JWT", responseJson.token);
-          return responseJson.token;
+
+        try {
+            const res = await fetch(`https://infra-timon-on.onrender.com/admin/login`, {
+              method: "POST",
+              body: JSON.stringify({
+                email: credentials.email,
+                password: credentials.password,
+              }),
+              headers: { "Content-type": "application/json" },
+            });
+
+            if (!res.ok) {
+              console.error("Falha no login com o backend:", res.status);
+              return null;
+            }
+
+            const responseJson = await res.json();
+
+            if (responseJson.token) {
+              (await cookies()).set("JWT", responseJson.token);
+
+              return {
+                id: credentials.email,
+                email: credentials.email,
+              };
+            }
+        } catch (error) {
+            console.error("Erro na função authorize:", error);
+            return null;
         }
+
         return null;
       },
     })
