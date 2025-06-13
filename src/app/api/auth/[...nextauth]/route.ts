@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { cookies } from "next/headers";
 
-export const handlerAuth = NextAuth({
+const handlerAuth = NextAuth({
   pages: {
     signIn: '/',
   },
