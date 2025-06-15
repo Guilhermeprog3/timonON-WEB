@@ -29,7 +29,7 @@ import {logoutAction}  from './action';
 const items = [
   {
     title: 'Dashboard',
-    url: '/home',
+    url: '/dashboard',
     icon: LayoutDashboard,
   },
   {
