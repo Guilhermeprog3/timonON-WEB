@@ -50,28 +50,46 @@ export function Dashboard({ data }: DashboardProps) {
       </div>
 
       <Card className="mt-6">
-        <CardHeader className="pt-4">
-          <CardTitle className="text-lg">Reclamações Recentes</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {data.recentes.map((rec) => (
-            <div key={rec.id} className="border-b pb-2">
-              <div className="flex justify-between items-center">
-                <div className="text-slate-900 font-semibold">{rec.title}</div>
-                <Badge className={getStatusColor(rec.status)}>{rec.status}</Badge>
-              </div>
-              <div className="text-sm text-slate-600">
-                ID: {rec.id} • Bairro: {rec.neighborhood}
-              </div>
-              <div className="text-sm text-slate-500">{new Date(rec.createdAt).toLocaleDateString("pt-BR")}</div>
-            </div>
-          ))}
+  <CardHeader className="pt-4 pb-2 flex flex-row items-start justify-between">
+    <div>
+      <CardTitle className="text-lg text-slate-900 font-semibold">Reclamações Recentes</CardTitle>
+      <p className="text-sm text-slate-500">As últimas reclamações registradas no sistema.</p>
+    </div>
+    <a
+      href="/complaint"
+      className="text-sm text-indigo-600 hover:underline font-medium flex items-center gap-1 mt-1"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5h6m2 0a2 2 0 012 2v0a2 2 0 01-2 2H9m0 0H7a2 2 0 01-2-2v0a2 2 0 012-2h2zm0 4v10m0 0h6m-6 0a2 2 0 01-2-2v0a2 2 0 012-2h6a2 2 0 012 2v0a2 2 0 01-2 2h-6z" />
+      </svg>
+      Ver Todas
+    </a>
+  </CardHeader>
 
-          {data.recentes.length === 0 && (
-            <div className="text-slate-500 text-sm pb-5">Nenhuma reclamação recente encontrada.</div>
-          )}
-        </CardContent>
-      </Card>
+  <CardContent className="space-y-4 px-6 pb-6">
+    {data.recentes.map((rec) => (
+      <div key={rec.id} className="border-b pb-2 flex justify-between items-start">
+        <div>
+          <div className="text-slate-900 font-semibold flex items-center gap-2">
+            {rec.title}
+            <Badge className={getStatusColor(rec.status)}>{rec.status}</Badge>
+          </div>
+          <div className="text-sm text-slate-600">
+            ID: {rec.id} • Bairro: {rec.neighborhood}
+          </div>
+        </div>
+        <div className="text-sm text-slate-500 mt-1 whitespace-nowrap">
+          {new Date(rec.createdAt).toLocaleDateString("pt-BR")}
+        </div>
+      </div>
+    ))}
+
+    {data.recentes.length === 0 && (
+      <div className="text-slate-500 text-sm pb-5">Nenhuma reclamação recente encontrada.</div>
+    )}
+  </CardContent>
+</Card>
+
     </>
   );
 }
