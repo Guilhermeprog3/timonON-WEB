@@ -1,7 +1,19 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
-import { Search, Filter, Calendar, Download, Trash2 } from "lucide-react"
+import * as React from "react"
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  FilterFn,
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
+import { Search, Filter, Calendar as CalendarIcon, Download, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -10,76 +22,116 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { format } from "date-fns"
+import { format, isAfter, isBefore, isValid } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import type { Complaint, ComplaintFilters } from "@/app/types/complaint"
-import { getComplaints, getComplaintsByFilters, getCategories } from "./action"
+import type { Complaint } from "@/app/types/complaint"
+import { getComplaints, getCategories } from "./action"
 import { DateRange } from "react-day-picker"
 
-interface ComplaintsListProps {
-  initialComplaints: Complaint[]
-}
+const dateBetweenFilterFn: FilterFn<any> = (row, columnId, value) => {
+    const date = new Date(row.getValue(columnId));
+    const [start, end] = value as (Date | undefined)[];
+    if (!start && !end) return true;
+    if (!isValid(date)) return false;
+    if (start && !end) return isAfter(date, start);
+    if (!start && end) return isBefore(date, end);
+    if (start && end) return isAfter(date, start) && isBefore(date, end);
+    return true;
+};
 
-export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
-  const [complaints, setComplaints] = useState<Complaint[]>(initialComplaints)
-  const [categories, setCategories] = useState<string[]>([])
-  const [isPending, startTransition] = useTransition()
-
-  const [filters, setFilters] = useState<Omit<ComplaintFilters, 'neighborhood'>>({
-    search: "",
-    status: "all",
-    category: "all",
-    dateRange: {
-      from: undefined,
-      to: undefined,
+const columns: ColumnDef<Complaint>[] = [
+    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'title', header: 'Título' },
+    { accessorKey: 'category', header: 'Categoria' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        const getVariant = (s: string) => {
+            if (s === 'Pendente') return 'destructive';
+            if (s === 'Em Andamento') return 'default';
+            if (s === 'Resolvido') return 'secondary';
+            return 'outline';
+        };
+        return <Badge variant={getVariant(status)}>{status}</Badge>
+      }
     },
-  })
-
-  useEffect(() => {
-    async function loadFilterOptions() {
-      const categoriesData = await getCategories();
-      setCategories(categoriesData)
+    {
+      accessorKey: 'date',
+      header: 'Data',
+      cell: ({ row }) => new Date(row.getValue("date")).toLocaleDateString("pt-BR"),
+      filterFn: dateBetweenFilterFn,
+    },
+    {
+      id: 'actions',
+      header: 'Ações',
+      cell: ({ row }) => (
+        <Button variant="ghost" size="sm" onClick={() => console.log('Excluir:', row.original.id)}>
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+      ),
     }
-    loadFilterOptions()
-  }, [])
+];
 
-  const handleFilterChange = (key: keyof typeof filters, value: string | DateRange | undefined) => {
-    const newFilters = { ...filters, [key]: value }
-    setFilters(newFilters)
+export function ComplaintsList() {
+  const [complaints, setComplaints] = React.useState<Complaint[]>([])
+  const [categories, setCategories] = React.useState<string[]>([])
+  const [loading, setLoading] = React.useState(true);
+  
+  const [searchInput, setSearchInput] = React.useState("");
 
-    startTransition(async () => {
-      const filteredComplaints = await getComplaintsByFilters(newFilters)
-      setComplaints(filteredComplaints)
-    })
-  }
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
+
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [globalFilter, setGlobalFilter] = React.useState('');
+
+  React.useEffect(() => {
+    async function loadInitialData() {
+      setLoading(true);
+      const [complaintsData, categoriesData] = await Promise.all([
+        getComplaints(),
+        getCategories(),
+      ]);
+      setComplaints(complaintsData);
+      setCategories(categoriesData);
+      setLoading(false);
+    }
+    loadInitialData();
+  }, []);
+
+  const table = useReactTable({
+    data: complaints,
+    columns,
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+  
+  React.useEffect(() => {
+      table.getColumn('date')?.setFilterValue([dateRange?.from, dateRange?.to]);
+  }, [dateRange, table]);
+
+  const handleSearch = () => {
+    setGlobalFilter(searchInput);
+  };
 
   const clearFilters = () => {
-    const clearedFilters = {
-      search: "",
-      status: "all",
-      category: "all",
-      dateRange: { from: undefined, to: undefined },
-    }
-    setFilters(clearedFilters)
-
-    startTransition(async () => {
-      const allComplaints = await getComplaints()
-      setComplaints(allComplaints)
-    })
-  }
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "Pendente":
-        return "destructive"
-      case "Em Andamento":
-        return "default"
-      case "Resolvido":
-        return "secondary"
-      default:
-        return "outline"
-    }
+      table.resetColumnFilters();
+      setGlobalFilter('');
+      setSearchInput('');
+      setDateRange(undefined); 
   }
 
   const exportComplaints = () => {
@@ -102,18 +154,24 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"> {/* Grid ajustado */}
-            <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
                 placeholder="Buscar por título ou ID..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange("search", e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearch();
+                    }
+                }}
                 className="pl-10"
               />
             </div>
 
-            <Select value={filters.status} onValueChange={(value) => handleFilterChange("status", value)}>
+            <Select value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -125,7 +183,7 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
               </SelectContent>
             </Select>
 
-            <Select value={filters.category} onValueChange={(value) => handleFilterChange("category", value)}>
+            <Select value={(table.getColumn("category")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("category")?.setFilterValue(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
@@ -143,20 +201,14 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={cn(
-                    "justify-start text-left font-normal",
-                    !filters.dateRange.from && "text-muted-foreground",
-                  )}
+                  className={cn("justify-start text-left font-normal w-full", !dateRange?.from && "text-muted-foreground")}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {filters.dateRange.from ? (
-                    filters.dateRange.to ? (
-                      <>
-                        {format(filters.dateRange.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
-                        {format(filters.dateRange.to, "dd/MM/yyyy", { locale: ptBR })}
-                      </>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>{format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} - {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}</>
                     ) : (
-                      format(filters.dateRange.from, "dd/MM/yyyy", { locale: ptBR })
+                      format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
                     )
                   ) : (
                     "Selecione um período"
@@ -167,9 +219,9 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
                 <CalendarComponent
                   initialFocus
                   mode="range"
-                  defaultMonth={filters.dateRange.from}
-                  selected={filters.dateRange}
-                  onSelect={(range) => handleFilterChange("dateRange", range)}
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
                   numberOfMonths={2}
                 />
               </PopoverContent>
@@ -177,7 +229,11 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
           </div>
 
           <div className="flex justify-start mt-4">
-            <Button variant="outline" onClick={clearFilters}>
+            <Button onClick={handleSearch}>
+                <Search className="h-4 w-4 mr-2" />
+                Buscar
+            </Button>
+            <Button variant="outline" onClick={clearFilters} className="ml-2">
               Limpar Filtros
             </Button>
           </div>
@@ -195,7 +251,7 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
           </div>
         </CardHeader>
         <CardContent>
-          {isPending ? (
+          {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
             </div>
@@ -203,40 +259,36 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Título</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {complaints.map((complaint) => (
-                    <TableRow key={complaint.id}>
-                      <TableCell className="font-medium text-blue-600">{complaint.id}</TableCell>
-                      <TableCell>{complaint.title}</TableCell>
-                      <TableCell>{complaint.category}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(complaint.status)}>{complaint.status}</Badge>
-                      </TableCell>
-                      <TableCell>{new Date(complaint.date).toLocaleDateString("pt-BR")}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </TableCell>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
                     </TableRow>
                   ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                     <TableRow>
+                        <TableCell colSpan={columns.length} className="text-center py-8 text-slate-500">
+                           Nenhuma reclamação encontrada com os filtros aplicados.
+                        </TableCell>
+                     </TableRow>
+                  )}
                 </TableBody>
               </Table>
-
-              {complaints.length === 0 && (
-                <div className="text-center py-8 text-slate-500">
-                  Nenhuma reclamação encontrada com os filtros aplicados.
-                </div>
-              )}
             </div>
           )}
         </CardContent>
