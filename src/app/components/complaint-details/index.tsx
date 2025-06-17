@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ComplaintDetailsData, Sector } from "@/app/types/complaint";
+import { ComplaintDetailsData } from "@/app/types/complaint";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
+import { markAsInProgress, markAsResolved } from "./action";
 
 const ComplaintMap = dynamic(() => import('./map'), { ssr: false });
 
@@ -24,7 +25,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
     
     const [updateStatus, setUpdateStatus] = React.useState<Status>(complaint.status);
     const [updateComment, setUpdateComment] = React.useState("");
-
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const getStatusVariant = (status: string): "destructive" | "default" | "secondary" | "outline" => {
         if (status === 'Pendente') return 'destructive';
@@ -33,11 +34,27 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
         return 'outline';
     };
 
-    const handleUpdateSubmit = () => {
-        console.log({
-            status: updateStatus,
-            comment: updateComment
-        });
+    const handleUpdateSubmit = async () => {
+        if (updateStatus === complaint.status && !updateComment) {
+            alert("Por favor, altere o status ou adicione um comentário para atualizar.");
+            return;
+        }
+        
+        setIsSubmitting(true);
+        try {
+            if (updateStatus === 'Em Andamento') {
+                await markAsInProgress(complaint.id, updateComment);
+            } else if (updateStatus === 'Resolvido') {
+                await markAsResolved(complaint.id, updateComment);
+            }
+            alert("Status atualizado com sucesso!");
+            router.refresh();
+        } catch (error) {
+            console.error("Falha ao atualizar status:", error);
+            alert("Ocorreu um erro ao atualizar o status.");
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -117,20 +134,18 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                             <CardTitle>Atualizar Status</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Status</label>
-                                    <Select value={updateStatus} onValueChange={(value) => setUpdateStatus(value as Status)}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecione o status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Pendente">Pendente</SelectItem>
-                                            <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                                            <SelectItem value="Resolvido">Resolvido</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                           <div className="space-y-2">
+                                <label className="text-sm font-medium">Status</label>
+                                <Select value={updateStatus} onValueChange={(value) => setUpdateStatus(value as Status)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione o status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Pendente">Pendente</SelectItem>
+                                        <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                                        <SelectItem value="Resolvido">Resolvido</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Comentário</label>
@@ -140,7 +155,9 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                                   onChange={(e) => setUpdateComment(e.target.value)}
                                 />
                             </div>
-                            <Button onClick={handleUpdateSubmit}>Atualizar</Button>
+                            <Button onClick={handleUpdateSubmit} disabled={isSubmitting}>
+                                {isSubmitting ? "Atualizando..." : "Atualizar"}
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>

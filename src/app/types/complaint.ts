@@ -3,6 +3,8 @@ export interface Citizen {
     email: string;
     cpf: string;
 }
+
+export type Status = "Pendente" | "Em Andamento" | "Resolvido";
 export interface Complaint {
     id: string
     title: string
