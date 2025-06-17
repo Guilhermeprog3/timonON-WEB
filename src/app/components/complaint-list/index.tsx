@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation" // Importado
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,7 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Search, Filter, Calendar as CalendarIcon, Download, Trash2 } from "lucide-react"
+import { Search, Filter, Calendar as CalendarIcon, Download, Trash2, Eye } from "lucide-react" 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -40,42 +41,8 @@ const dateBetweenFilterFn: FilterFn<any> = (row, columnId, value) => {
     return true;
 };
 
-const columns: ColumnDef<Complaint>[] = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'title', header: 'Título' },
-    { accessorKey: 'category', header: 'Categoria' },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const status = row.getValue("status") as string;
-        const getVariant = (s: string) => {
-            if (s === 'Pendente') return 'destructive';
-            if (s === 'Em Andamento') return 'default';
-            if (s === 'Resolvido') return 'secondary';
-            return 'outline';
-        };
-        return <Badge variant={getVariant(status)}>{status}</Badge>
-      }
-    },
-    {
-      accessorKey: 'date',
-      header: 'Data',
-      cell: ({ row }) => new Date(row.getValue("date")).toLocaleDateString("pt-BR"),
-      filterFn: dateBetweenFilterFn,
-    },
-    {
-      id: 'actions',
-      header: 'Ações',
-      cell: ({ row }) => (
-        <Button variant="ghost" size="sm" onClick={() => console.log('Excluir:', row.original.id)}>
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </Button>
-      ),
-    }
-];
-
 export function ComplaintsList() {
+  const router = useRouter();
   const [complaints, setComplaints] = React.useState<Complaint[]>([])
   const [categories, setCategories] = React.useState<string[]>([])
   const [loading, setLoading] = React.useState(true);
@@ -87,6 +54,52 @@ export function ComplaintsList() {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = React.useState('');
+
+  // A definição das colunas foi movida para dentro do componente
+  // para ter acesso ao 'router'
+  const columns: ColumnDef<Complaint>[] = [
+      { accessorKey: 'id', header: 'ID' },
+      { accessorKey: 'title', header: 'Título' },
+      { accessorKey: 'category', header: 'Categoria' },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => {
+          const status = row.getValue("status") as string;
+          const getVariant = (s: string) => {
+              if (s === 'Pendente') return 'destructive';
+              if (s === 'Em Andamento') return 'default';
+              if (s === 'Resolvido') return 'secondary';
+              return 'outline';
+          };
+          return <Badge variant={getVariant(status)}>{status}</Badge>
+        }
+      },
+      {
+        accessorKey: 'date',
+        header: 'Data',
+        cell: ({ row }) => new Date(row.getValue("date")).toLocaleDateString("pt-BR"),
+        filterFn: dateBetweenFilterFn,
+      },
+      {
+        id: 'actions',
+        header: 'Ações',
+        cell: ({ row }) => (
+          <div className="flex items-center justify-end space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/complaints/${row.original.id}`)} // Ação de clique adicionada
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => console.log('Excluir:', row.original.id)}>
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        ),
+      }
+  ];
 
   React.useEffect(() => {
     async function loadInitialData() {
@@ -230,8 +243,8 @@ export function ComplaintsList() {
 
           <div className="flex justify-start mt-4">
             <Button onClick={handleSearch}>
-                <Search className="h-4 w-4 mr-2" />
-                Buscar
+              <Search className="h-4 w-4 mr-2" />
+              Buscar
             </Button>
             <Button variant="outline" onClick={clearFilters} className="ml-2">
               Limpar Filtros
@@ -273,7 +286,11 @@ export function ComplaintsList() {
                   <TableBody>
                     {table.getRowModel().rows?.length ? (
                       table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
+                        <TableRow 
+                           key={row.id}
+                           className="cursor-pointer"
+                           onClick={() => router.push(`/complaintDetails/${row.original.id}`)}
+                        >
                           {row.getVisibleCells().map((cell) => (
                             <TableCell key={cell.id}>
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -294,7 +311,7 @@ export function ComplaintsList() {
 
               <div className="flex items-center justify-end space-x-2 py-4">
                 <div className="flex-1 text-sm text-muted-foreground">
-                  {table.getFilteredRowModel().rows.length} linha(s) selecionada(s).
+                  {table.getFilteredRowModel().rows.length} linha(s) encontrada(s).
                 </div>
                 <div className="space-x-2">
                   <Button
