@@ -19,6 +19,7 @@ type DashboardData = {
 
 export async function getDashboardData(): Promise<DashboardData> {
   const token = (await cookies()).get("JWT")?.value;
+  console.log("TOKEN", token);
   if (!token) return { total: 0, pendentes: 0, andamento: 0, resolvidas: 0, recentes: [] };
 
   try {
