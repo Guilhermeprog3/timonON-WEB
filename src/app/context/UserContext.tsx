@@ -14,6 +14,7 @@ export const UserContext = createContext<UserContextProps>({} as UserContextProp
 
 export const UserProvider = ({ children }: PropsWithChildren) => {
   const forgotPassword = async (email: string): Promise<{ success: boolean; message: string }> => {
+    console.log(email)
     try {
       const { data } = await api.post("restore/send", { email })
       return {

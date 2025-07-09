@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
-import { useUser } from "@/app/context/UserContext"
+import { requestPasswordReset } from "./action"
 
 const emailSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -33,29 +32,23 @@ export function EmailStep({ onSuccess }: EmailStepProps) {
     },
   })
 
-  const { forgotPassword } = useUser()
-
   async function onSubmit(values: z.infer<typeof emailSchema>) {
     setIsLoading(true)
     setError(undefined)
     setSuccess(undefined)
 
-    try {
-      const response = await forgotPassword(values.email)
+    const response = await requestPasswordReset(values.email);
 
-      if (response.success) {
-        setSuccess(response.message)
-        setTimeout(() => {
-          onSuccess(values.email)
-        }, 1500)
-      } else {
-        setError(response.message)
-      }
-    } catch {
-      setError("Ocorreu um erro ao solicitar a recuperação de senha. Tente novamente mais tarde.")
-    } finally {
-      setIsLoading(false)
+    if (response.success) {
+      setSuccess(response.message)
+      setTimeout(() => {
+        onSuccess(values.email)
+      }, 1500)
+    } else {
+      setError(response.message)
     }
+    
+    setIsLoading(false)
   }
 
   return (
@@ -89,6 +82,7 @@ export function EmailStep({ onSuccess }: EmailStepProps) {
                       placeholder="seu.email@timon.ma.gov.br"
                       className="pl-10 border-secondary/50 focus-visible:ring-secondary"
                       {...field}
+                      disabled={isLoading}
                     />
                   </div>
                 </FormControl>

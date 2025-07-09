@@ -7,6 +7,7 @@ import {
   User2,
   LogOut,
   ChevronUp,
+  Building,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -24,35 +25,52 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {logoutAction}  from './action';
+import { signOut } from "next-auth/react"; // 1. Importe a função signOut
+import { useMemo } from 'react';
 
-const items = [
-  {
-    title: 'Dashboard',
-    url: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    title: 'Reclamações',
-    url: '/complaint',
-    icon: MessageSquareWarning,
-  },
-  {
-    title: 'Users',
-    url: '/users',
-    icon: Users,
-  },
-  {
-    title: 'Configuração',
-    url: '#',
-    icon: Settings,
-  },
+interface AppSidebarProps {
+  userRole: string;
+}
+
+const allItems = [
+    {
+        title: 'Dashboard',
+        url: '/dashboard',
+        icon: LayoutDashboard,
+        roles: ['SUPERADMIN', 'ADMIN']
+    },
+    {
+        title: 'Reclamações',
+        url: '/complaint',
+        icon: MessageSquareWarning,
+        roles: ['SUPERADMIN', 'ADMIN']
+    },
+    {
+        title: 'Users',
+        url: '/users',
+        icon: Users,
+        roles: ['SUPERADMIN']
+    },
+    {
+        title: 'Departamentos',
+        url: '/departments',
+        icon: Building,
+        roles: ['SUPERADMIN']
+    },
+    {
+        title: 'Configuração',
+        url: '#',
+        icon: Settings,
+        roles: ['SUPERADMIN']
+    },
 ];
 
-export function AppSidebar() {
-  function touchlogout () {
-    logoutAction();
-  }
+export function AppSidebar({ userRole }: AppSidebarProps) {
+
+  const menuItems = useMemo(() => {
+    if (!userRole) return [];
+    return allItems.filter(item => item.roles.includes(userRole));
+  }, [userRole]);
 
   return (
     <Sidebar>
@@ -60,7 +78,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a href={item.url} className="flex items-center gap-3">
@@ -102,8 +120,9 @@ export function AppSidebar() {
               </a>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
+              {/* 2. Use a função signOut no onClick */}
               <a
-                onClick={() => touchlogout()}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center gap-3 p-2 text-red-500 cursor-pointer hover:bg-slate-200 rounded-sm"
               >
                 <LogOut size={16} />

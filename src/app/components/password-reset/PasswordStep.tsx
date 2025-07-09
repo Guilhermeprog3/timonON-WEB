@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
-import { useUser } from "@/app/context/UserContext"
+import { resetPassword } from "./action"
 
 const passwordSchema = z
   .object({
@@ -44,25 +43,19 @@ export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepPro
     },
   })
 
-  const { resetPassword } = useUser()
-
   async function onSubmit(values: z.infer<typeof passwordSchema>) {
     setIsLoading(true)
     setError(undefined)
 
-    try {
-      const response = await resetPassword(code, email, values.password)
+    const response = await resetPassword(email, code, values.password);
 
-      if (response.success) {
-        onSuccess()
-      } else {
-        setError(response.message)
-      }
-    } catch { // Corrigido
-      setError("Ocorreu um erro ao redefinir sua senha. Tente novamente mais tarde.")
-    } finally {
-      setIsLoading(false)
+    if (response.success) {
+      onSuccess()
+    } else {
+      setError(response.message)
     }
+    
+    setIsLoading(false)
   }
 
   return (
@@ -90,6 +83,7 @@ export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepPro
                       placeholder="Digite sua nova senha"
                       className="pl-10 border-secondary/50 focus-visible:ring-secondary"
                       {...field}
+                      disabled={isLoading}
                     />
                     <Button
                       type="button"
@@ -122,6 +116,7 @@ export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepPro
                       placeholder="Confirme sua nova senha"
                       className="pl-10 border-secondary/50 focus-visible:ring-secondary"
                       {...field}
+                      disabled={isLoading}
                     />
                     <Button
                       type="button"
@@ -141,7 +136,7 @@ export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepPro
           />
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button type="button" variant="outline" className="w-full sm:w-auto border-secondary/50" onClick={onBack}>
+            <Button type="button" variant="outline" className="w-full sm:w-auto border-secondary/50" onClick={onBack} disabled={isLoading}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>

@@ -1,8 +1,10 @@
-import NextAuth from "next-auth"
+import NextAuth, { AuthOptions } from "next-auth" // Importe 'AuthOptions'
 import CredentialsProvider from "next-auth/providers/credentials"
-import { cookies } from "next/headers";
+import { cookies } from "next/headers"
+import { Admin } from "@/app/types/user"
 
-const handlerAuth = NextAuth({
+// Renomeie a constante para 'authOptions' e exporte-a
+export const authOptions: AuthOptions = {
   pages: {
     signIn: '/',
   },
@@ -13,46 +15,61 @@ const handlerAuth = NextAuth({
         email: { type: "email" },
         password: { type: "password" },
       },
-      async authorize(credentials: Record<string, string> | undefined) {
-        if (!credentials) {
-            return null;
-        }
-
+      async authorize(credentials) {
+        if (!credentials) return null;
         try {
-            const res = await fetch(`https://infra-timon-on.onrender.com/admin/login`, {
-              method: "POST",
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
-              headers: { "Content-type": "application/json" },
-            });
-            
-            if (!res.ok) {
-              console.error("Falha no login com o backend:", res.status);
-              return null;
-            }
+          const res = await fetch(`https://infra-timon-on.onrender.com/admin/login`, {
+            method: "POST",
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+            headers: { "Content-Type": "application/json" },
+          });
 
-            const responseJson = await res.json();
-            
-            if (responseJson.token) {
-              (await cookies()).set("JWT", responseJson.token);
-              
-              return {
-                id: credentials.email,
-                email: credentials.email,
-              };
-            }
+          if (!res.ok) return null;
+
+          const responseJson = await res.json()
+          const userAdmin: Admin = responseJson?.admin
+          const userToken: string = responseJson?.token?.token
+
+          if (userToken && userAdmin) {
+            (await cookies()).set("JWT", userToken)
+            return {
+              id: userAdmin.id.toString(),
+              name: userAdmin.name,
+              email: userAdmin.email,
+              role: userAdmin.role,
+              departmentId: userAdmin.departmentId,
+            };
+          }
         } catch (error) {
-            console.error("Erro na função authorize:", error);
-            return null;
+          return null
         }
-
-        return null;
+        return null
       },
-    })
+    }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+        token.departmentId = user.departmentId
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.role = token.role
+        session.user.departmentId = token.departmentId
+      }
+      return session
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
 
-export { handlerAuth as GET, handlerAuth as POST }
+// Crie o handler usando as opções exportadas
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };

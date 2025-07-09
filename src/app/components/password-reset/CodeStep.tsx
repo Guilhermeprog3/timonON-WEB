@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
-import { useUser } from "@/app/context/UserContext"
+import { validateResetCode } from "./action"
 
 const codeSchema = z.object({
   code: z
@@ -38,26 +37,19 @@ export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
     },
   })
 
-  const { validateResetCode } = useUser()
-
   async function onSubmit(values: z.infer<typeof codeSchema>) {
     setIsLoading(true)
     setError(undefined)
 
-    try {
-      const isValid = await validateResetCode(values.code, email)
-      if (isValid) {
-        onSuccess(values.code)
-      }
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            setError(err.message || "Código inválido. Verifique e tente novamente.")
-        } else {
-            setError("Ocorreu um erro desconhecido.")
-        }
-    } finally {
-      setIsLoading(false)
+    const response = await validateResetCode(email, values.code);
+    
+    if (response.success) {
+      onSuccess(values.code)
+    } else {
+      setError(response.message)
     }
+
+    setIsLoading(false)
   }
 
   return (
@@ -93,6 +85,7 @@ export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
                       className="pl-10 border-secondary/50 focus-visible:ring-secondary text-center tracking-widest font-mono"
                       maxLength={6}
                       {...field}
+                      disabled={isLoading}
                     />
                   </div>
                 </FormControl>
@@ -102,7 +95,7 @@ export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
           />
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button type="button" variant="outline" className="w-full sm:w-auto border-secondary/50" onClick={onBack}>
+            <Button type="button" variant="outline" className="w-full sm:w-auto border-secondary/50" onClick={onBack} disabled={isLoading}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>
