@@ -46,7 +46,7 @@ export function EditProfileModal({
       }
 
       const res = await fetch("https://infra-timon-on.onrender.com/admin", {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
