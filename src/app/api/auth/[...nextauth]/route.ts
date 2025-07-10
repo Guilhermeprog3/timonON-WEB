@@ -1,9 +1,8 @@
-import NextAuth, { AuthOptions } from "next-auth" // Importe 'AuthOptions'
+import NextAuth, { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { cookies } from "next/headers"
 import { Admin } from "@/app/types/user"
 
-// Renomeie a constante para 'authOptions' e exporte-a
 export const authOptions: AuthOptions = {
   pages: {
     signIn: '/',
@@ -43,7 +42,7 @@ export const authOptions: AuthOptions = {
               departmentId: userAdmin.departmentId,
             };
           }
-        } catch (error) {
+        } catch {
           return null
         }
         return null
@@ -69,7 +68,6 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-// Crie o handler usando as opções exportadas
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
