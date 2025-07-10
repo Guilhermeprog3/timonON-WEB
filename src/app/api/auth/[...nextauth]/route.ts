@@ -1,9 +1,8 @@
-import NextAuth, { AuthOptions } from "next-auth" // Importe 'AuthOptions'
-import CredentialsProvider from "next-auth/providers/credentials"
-import { cookies } from "next/headers"
-import { Admin } from "@/app/types/user"
+import NextAuth, { AuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { cookies } from "next/headers";
+import { Admin } from "@/app/types/user";
 
-// Renomeie a constante para 'authOptions' e exporte-a
 export const authOptions: AuthOptions = {
   pages: {
     signIn: '/',
@@ -29,47 +28,50 @@ export const authOptions: AuthOptions = {
 
           if (!res.ok) return null;
 
-          const responseJson = await res.json()
-          const userAdmin: Admin = responseJson?.admin
-          const userToken: string = responseJson?.token?.token
+          const responseJson = await res.json();
+          const userAdmin: Admin = responseJson?.admin;
+          const userToken: string = responseJson?.token?.token;
 
           if (userToken && userAdmin) {
-            (await cookies()).set("JWT", userToken)
+            (await cookies()).set("JWT", userToken);
+
             return {
               id: userAdmin.id.toString(),
               name: userAdmin.name,
               email: userAdmin.email,
               role: userAdmin.role,
               departmentId: userAdmin.departmentId,
+              accessToken: userToken, // ✅ ESSENCIAL para tipagem estendida
             };
           }
-        } catch (error) {
-          return null
+        } catch {
+          return null;
         }
-        return null
+        return null;
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
-        token.departmentId = user.departmentId
+        token.role = user.role;
+        token.departmentId = user.departmentId;
+        token.accessToken = user.accessToken; // ✅ para manter na session
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = token.role
-        session.user.departmentId = token.departmentId
+        session.user.role = token.role;
+        session.user.departmentId = token.departmentId;
       }
-      return session
+      session.accessToken = token.accessToken; // ✅ para acesso no client
+      return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-// Crie o handler usando as opções exportadas
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

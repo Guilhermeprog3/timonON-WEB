@@ -59,7 +59,7 @@ const allItems = [
     },
     {
         title: 'Configuração',
-        url: '#',
+        url: '/settings',
         icon: Settings,
         roles: ['SUPERADMIN']
     },
