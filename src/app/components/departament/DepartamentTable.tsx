@@ -1,13 +1,21 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
-import { DataTable } from "@/components/ui/data-table"
-import { Pencil, Trash2, Plus, Check, X } from "lucide-react"
+import * as React from "react"
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
+import { Pencil, Trash2, Plus, Check, X, Search } from "lucide-react"
 import { Departament } from "@/app/types/user"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FormEvent, useState } from "react"
-import { createDepartment, updateDepartment, deleteDepartment } from "./action"
 import {
   Dialog,
   DialogContent,
@@ -18,13 +26,26 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { createDepartment, updateDepartment, deleteDepartment } from "./action"
 
 export function DepartamentTable({ initialDepartments }: { initialDepartments: Departament[] }) {
-  const [departments, setDepartments] = useState<Departament[]>(initialDepartments)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [editingName, setEditingName] = useState("")
-  const [newDepartmentName, setNewDepartmentName] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [departments, setDepartments] = React.useState<Departament[]>(initialDepartments)
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState('')
+
+  const [editingId, setEditingId] = React.useState<number | null>(null)
+  const [editingName, setEditingName] = React.useState("")
+  const [newDepartmentName, setNewDepartmentName] = React.useState("")
+  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
 
   const handleEdit = (department: Departament) => {
     setEditingId(department.id)
@@ -37,12 +58,15 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
   }
 
   const handleSave = async (id: number) => {
-    const result = await updateDepartment(id, editingName)
+    if (!editingName.trim()) {
+        alert("O nome do departamento não pode estar vazio.");
+        return;
+    }
+    const result = await updateDepartment(id, editingName);
     if (result.success) {
-      setDepartments(departments.map((d) => (d.id === id ? { ...d, name: editingName } : d)))
-      handleCancel()
+      window.location.reload();
     } else {
-      alert(result.message)
+      alert(result.message);
     }
   }
 
@@ -57,26 +81,26 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
     }
   }
 
-  const handleAddDepartment = async (e: FormEvent) => {
-    e.preventDefault()
+  const handleAddDepartment = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!newDepartmentName.trim()) {
-      alert("O nome do departamento não pode estar vazio.")
-      return
+      alert("O nome do departamento não pode estar vazio.");
+      return;
     }
-    const result = await createDepartment(newDepartmentName)
+    const result = await createDepartment(newDepartmentName);
     if (result.success) {
-      window.location.reload()
-      setIsAddDialogOpen(false)
-      setNewDepartmentName("")
+      setIsAddDialogOpen(false);
+      setNewDepartmentName("");
+      window.location.reload();
     } else {
-      alert(result.message)
+      alert(result.message);
     }
   }
 
   const columns: ColumnDef<Departament>[] = [
     {
       accessorKey: "name",
-      header: "Nome",
+      header: "Nome do Departamento",
       cell: ({ row }) =>
         editingId === row.original.id ? (
           <Input
@@ -90,11 +114,11 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
     },
     {
       id: "actions",
-      header: "Ações",
+      header: () => <div className="text-right">Ações</div>,
       cell: ({ row }) => {
         const isEditing = editingId === row.original.id
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             {isEditing ? (
               <>
                 <Button variant="ghost" size="icon" onClick={() => handleSave(row.original.id)}>
@@ -118,51 +142,137 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
     },
   ]
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Departamentos</h2>
-          <p className="text-sm text-gray-600">Adicione, edite ou remova departamentos do sistema.</p>
-        </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus size={16} />
-              Novo Departamento
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Adicionar Novo Departamento</DialogTitle>
-              <DialogDescription>
-                Insira o nome do novo departamento. Clique em salvar quando terminar.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleAddDepartment}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Nome
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newDepartmentName}
-                    onChange={(e) => setNewDepartmentName(e.target.value)}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Salvar Departamento</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+  const table = useReactTable({
+    data: departments,
+    columns,
+    state: { sorting, globalFilter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
-      <DataTable columns={columns} data={departments} />
+  return (
+    <div className="space-y-6">
+       <div className="bg-white p-8 rounded-lg border shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Gerenciamento de Departamentos</h1>
+        <p className="text-sm text-slate-600">Adicione, edite ou remova os departamentos do sistema.</p>
+      </div>
+      
+      <Card>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4 p-4">
+            <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Input
+                placeholder="Buscar por nome do departamento..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="pl-10 w-full"
+                />
+            </div>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                <Plus size={16} />
+                Novo Departamento
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                <DialogTitle>Adicionar Novo Departamento</DialogTitle>
+                <DialogDescription>
+                    Insira o nome do novo departamento. Clique em salvar quando terminar.
+                </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddDepartment}>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                        Nome
+                    </Label>
+                    <Input
+                        id="name"
+                        value={newDepartmentName}
+                        onChange={(e) => setNewDepartmentName(e.target.value)}
+                        className="col-span-3"
+                        required
+                    />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="submit">Salvar Departamento</Button>
+                </DialogFooter>
+                </form>
+            </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
+             <div className="overflow-x-auto">
+                <Table>
+                <TableHeader>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                        ))}
+                    </TableRow>
+                    ))}
+                </TableHeader>
+                <TableBody>
+                    {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                        ))}
+                        </TableRow>
+                    ))
+                    ) : (
+                    <TableRow>
+                        <TableCell colSpan={columns.length} className="h-24 text-center">
+                        Nenhum departamento encontrado.
+                        </TableCell>
+                    </TableRow>
+                    )}
+                </TableBody>
+                </Table>
+            </div>
+        </CardContent>
+         <div className="flex items-center justify-end space-x-2 p-6 border-t">
+          <div className="flex-1 text-sm text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} de {departments.length} departamento(s).
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Próxima
+            </Button>
+          </div>
+        </div>
+      </Card>
     </div>
   )
 }

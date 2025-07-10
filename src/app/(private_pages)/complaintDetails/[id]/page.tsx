@@ -8,7 +8,7 @@ type ComplaintDetailsPageProps = {
 
 export default async function ComplaintDetailsPage({ params }: ComplaintDetailsPageProps) {
   return (
-    <div className="p-6">
+    <div className="p-8">
         <ComplaintDetailsServer id={params.id} />
     </div>
   );

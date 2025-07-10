@@ -17,27 +17,34 @@ type DashboardData = {
   }[];
 };
 
+interface ApiPost {
+  id: string;
+  title: string;
+  status: "Pendente" | "Em Andamento" | "Resolvido";
+  neighborhood?: { name: string };
+  creation_date: string;
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
   const token = (await cookies()).get("JWT")?.value;
-  console.log("TOKEN", token);
   if (!token) return { total: 0, pendentes: 0, andamento: 0, resolvidas: 0, recentes: [] };
 
   try {
-    const response = await api.get("/posts", {
+    const response = await api.get<ApiPost[]>("/posts", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     const posts = response.data;
 
     const total = posts.length;
-    const pendentes = posts.filter((p: any) => p.status === "Pendente").length;
-    const andamento = posts.filter((p: any) => p.status === "Em Andamento").length;
-    const resolvidas = posts.filter((p: any) => p.status === "Resolvido").length;
+    const pendentes = posts.filter((p) => p.status === "Pendente").length;
+    const andamento = posts.filter((p) => p.status === "Em Andamento").length;
+    const resolvidas = posts.filter((p) => p.status === "Resolvido").length;
 
     const recentes = posts
-      .sort((a: any, b: any) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime())
+      .sort((a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime())
       .slice(0, 5)
-      .map((post: any) => ({
+      .map((post) => ({
         id: post.id,
         title: post.title,
         status: post.status,
