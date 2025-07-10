@@ -28,13 +28,13 @@ export function Settings({ admin }: SettingsProps) {
       {/* Card do Usuário */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2 mt-2">
+          <CardTitle className="text-lg flex items-center gap-2">
             <Mail className="w-5 h-5" />
             {admin.name}
           </CardTitle>
           <p className="text-slate-500 text-sm">{admin.email}</p>
         </CardHeader>
-        <CardContent className="flex gap-2 mb-2">
+        <CardContent className="flex gap-2 mb-5">
           <Badge variant="outline">{admin.role}</Badge>
           {admin.department ? (
             <Badge variant="outline">{admin.department.name}</Badge>
@@ -49,10 +49,10 @@ export function Settings({ admin }: SettingsProps) {
       {/* Card da Conta */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2 mt-2">Conta</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">Conta</CardTitle>
           <p className="text-slate-500 text-sm">Gerencie suas informações pessoais e preferências</p>
         </CardHeader>
-        <CardContent className="space-y-4 mb-2">
+        <CardContent className="space-y-4 mb-5">
           <div className="flex justify-between items-center border-b pb-3">
             <div>
               <p className="text-sm text-slate-600">Informações Pessoais</p>

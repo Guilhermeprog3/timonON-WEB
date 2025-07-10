@@ -1,17 +1,25 @@
 // src/app/components/settings/passwordActions.tsx
-"use server";
 
 import { cookies } from "next/headers";
 
 export async function sendResetCode(email: string): Promise<boolean> {
-  const res = await fetch("https://infra-timon-on.onrender.com/restore/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
+  try {
+    const res = await fetch("https://infra-timon-on.onrender.com/restore/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
 
-  return res.ok;
+    const text = await res.text(); // <- isso captura qualquer resposta da API
+    console.log("Resposta da API /restore/send:", res.status, text);
+
+    return res.ok;
+  } catch (error) {
+    console.error("Erro ao enviar código de verificação:", error);
+    return false;
+  }
 }
+
 
 export async function confirmResetCode(email: string, code: string): Promise<string | null> {
   const res = await fetch("https://infra-timon-on.onrender.com/restore/confirm", {
