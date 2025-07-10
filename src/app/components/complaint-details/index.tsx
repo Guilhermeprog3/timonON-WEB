@@ -88,12 +88,12 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         <CardHeader>
                             <CardTitle>Detalhes da Reclamação</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6 p-6">
                             <div>
                                 <h3 className="text-sm font-semibold mb-1">Descrição</h3>
                                 <p className="text-sm text-muted-foreground">{complaint.description}</p>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <h3 className="text-sm font-semibold mb-1">Data de Registro</h3>
                                     <p className="text-sm text-muted-foreground">{new Date(complaint.creation_date).toLocaleDateString('pt-BR')}</p>
@@ -105,11 +105,17 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                             </div>
                             <div>
                                 <h3 className="text-sm font-semibold mb-1">Foto</h3>
-                                {complaint.photo_url ? (
-                                    <img src={complaint.photo_url} alt="Foto da reclamação" className="rounded-lg border max-w-sm mt-2" />
-                                ) : (
-                                    <div className="text-muted-foreground border rounded-lg p-10 text-center mt-2">Nenhuma foto enviada.</div>
-                                )}
+                                <div className="mt-2 flex justify-center items-center border rounded-lg p-4 h-64">
+                                  {complaint.photo_url ? (
+                                      <img 
+                                        src={complaint.photo_url} 
+                                        alt="Foto da reclamação" 
+                                        className="rounded-lg max-h-full max-w-full object-contain" 
+                                      />
+                                  ) : (
+                                      <div className="text-muted-foreground text-center">Nenhuma foto enviada.</div>
+                                  )}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -118,7 +124,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" /> Localização</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-6">
                              {complaint.latitude && complaint.longitude ? (
                                 <ComplaintMap lat={complaint.latitude} lng={complaint.longitude} />
                              ) : (
@@ -133,7 +139,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         <CardHeader>
                             <CardTitle>Atualizar Status</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 p-6">
                            <div className="space-y-2">
                                 <label className="text-sm font-medium">Status</label>
                                 <Select value={updateStatus} onValueChange={(value) => setUpdateStatus(value as Status)}>
@@ -167,7 +173,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         <CardHeader>
                             <CardTitle>Dados do Cidadão</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3 text-sm">
+                        <CardContent className="space-y-3 text-sm p-6">
                             <p><strong>Nome:</strong> {complaint.citizen.name}</p>
                             <p><strong>Email:</strong> {complaint.citizen.email}</p>
                             <p><strong>CPF:</strong> {complaint.citizen.cpf}</p>
@@ -178,7 +184,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         <CardHeader>
                             <CardTitle>Histórico de Atualizações</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 p-6">
                             {complaint.updates.length > 0 ? complaint.updates.map((update, index) => (
                                <div key={update.id} className={`text-sm ${index > 0 ? 'border-t pt-4' : ''}`}>
                                     <div className="flex justify-between items-center mb-1">
