@@ -15,31 +15,24 @@ import { ProgressIndicator } from "@/app/components/password-reset/ProgressIndic
 const PasswordResetPage = () => {
   const [step, setStep] = useState<"email" | "verification" | "password" | "success">("email")
   const [email, setEmail] = useState("")
-  const [code, setCode] = useState("")
+  const [tokenId, setTokenId] = useState("")
+  const [code, setCode] = useState("") 
 
   const getStepTitle = () => {
     switch (step) {
-      case "email":
-        return "Recuperar Senha"
-      case "verification":
-        return "Verificar Código"
-      case "password":
-        return "Nova Senha"
-      case "success":
-        return "Senha Alterada"
+      case "email": return "Recuperar Senha";
+      case "verification": return "Verificar Código";
+      case "password": return "Nova Senha";
+      case "success": return "Senha Alterada";
     }
   }
 
   const getStepDescription = () => {
     switch (step) {
-      case "email":
-        return "Digite seu email para receber um código de recuperação"
-      case "verification":
-        return "Digite o código de verificação enviado para seu email"
-      case "password":
-        return "Digite e confirme sua nova senha"
-      case "success":
-        return "Sua senha foi alterada com sucesso"
+      case "email": return "Digite seu email para receber um código de recuperação";
+      case "verification": return "Digite o código de verificação enviado para seu email";
+      case "password": return "Digite e confirme sua nova senha";
+      case "success": return "Sua senha foi alterada com sucesso";
     }
   }
 
@@ -55,12 +48,12 @@ const PasswordResetPage = () => {
     <div className="flex min-h-screen flex-col items-center justify-center bg-white p-8">
       <Card className="w-full max-w-lg border border-yellow-500">
         <CardHeader className="space-y-1 text-center rounded-t-lg border-b-4 border-yellow-500 bg-[#291F75] text-white p-6 pt-6">
-          <div className="flex justify-center mb-4 h-20 relative">
+          <div className="flex justify-center mb-4 h-32 relative">
             <Image 
               src="/assets/prefeitura-logo.png" 
               alt="Logo da Prefeitura" 
-              width={80}
-              height={80}
+              width={120}
+              height={120}
               className="object-contain"
               priority
             />
@@ -74,8 +67,9 @@ const PasswordResetPage = () => {
           
           {step === "email" && (
             <EmailStep 
-              onSuccess={(email) => {
+              onSuccess={(email, receivedTokenId) => {
                 setEmail(email)
+                setTokenId(receivedTokenId)
                 setStep("verification")
               }} 
             />
@@ -84,9 +78,10 @@ const PasswordResetPage = () => {
           {step === "verification" && (
             <CodeStep 
               email={email}
+              tokenId={tokenId}
               onBack={goBack}
-              onSuccess={(code) => {
-                setCode(code)
+              onSuccess={(verifiedCode) => {
+                setCode(verifiedCode)
                 setStep("password")
               }}
             />
@@ -94,8 +89,7 @@ const PasswordResetPage = () => {
 
           {step === "password" && (
             <PasswordStep 
-              email={email}
-              code={code}
+              tokenId={tokenId}
               onBack={goBack}
               onSuccess={() => setStep("success")}
             />

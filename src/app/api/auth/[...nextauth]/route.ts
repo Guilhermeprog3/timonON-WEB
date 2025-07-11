@@ -41,7 +41,7 @@ export const authOptions: AuthOptions = {
               email: userAdmin.email,
               role: userAdmin.role,
               departmentId: userAdmin.departmentId,
-              accessToken: userToken, // ✅ ESSENCIAL para tipagem estendida
+              accessToken: userToken,
             };
           }
         } catch {
@@ -56,7 +56,7 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.role = user.role;
         token.departmentId = user.departmentId;
-        token.accessToken = user.accessToken; // ✅ para manter na session
+        token.accessToken = user.accessToken;
       }
       return token;
     },
@@ -65,7 +65,7 @@ export const authOptions: AuthOptions = {
         session.user.role = token.role;
         session.user.departmentId = token.departmentId;
       }
-      session.accessToken = token.accessToken; // ✅ para acesso no client
+      session.accessToken = token.accessToken;
       return session;
     },
   },

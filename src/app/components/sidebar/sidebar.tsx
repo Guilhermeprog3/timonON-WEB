@@ -24,11 +24,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { signOut } from "next-auth/react"; // 1. Importe a função signOut
+import { signOut } from "next-auth/react";
 import { useMemo } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 interface AppSidebarProps {
+  userName: string;
   userRole: string;
 }
 
@@ -61,11 +65,12 @@ const allItems = [
         title: 'Configuração',
         url: '/settings',
         icon: Settings,
-        roles: ['SUPERADMIN']
+        roles: ['SUPERADMIN', 'ADMIN']
     },
 ];
 
-export function AppSidebar({ userRole }: AppSidebarProps) {
+export function AppSidebar({ userName, userRole }: AppSidebarProps) {
+  const pathname = usePathname();
 
   const menuItems = useMemo(() => {
     if (!userRole) return [];
@@ -74,20 +79,27 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarContent className="bg-indigo-900 text-white">
+      {/* Restaurado o esquema de cores original */}
+      <SidebarContent className="bg-indigo-900 text-white flex flex-col">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center gap-3">
-                      <item.icon size={20} />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const isActive = pathname.startsWith(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      className={`flex items-center gap-3 rounded-md px-3 py-2 transition-all hover:bg-indigo-800 ${isActive ? 'bg-indigo-700 font-semibold' : ''}`}
+                    >
+                      <Link href={item.url}>
+                        <item.icon size={20} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -96,10 +108,10 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
       <SidebarFooter className="bg-indigo-950 border-t border-indigo-800 p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="w-full text-white hover:bg-indigo-800">
+            <SidebarMenuButton className="w-full text-white hover:bg-indigo-800 rounded-lg">
               <div className="flex items-center gap-3">
                 <User2 size={20} />
-                <span className="truncate">Username</span>
+                <span className="truncate font-medium">{userName}</span>
               </div>
               <ChevronUp size={20} className="ml-auto" />
             </SidebarMenuButton>
@@ -111,22 +123,22 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
             className="w-[var(--radix-dropdown-menu-trigger-width)] bg-slate-50 text-slate-800 rounded-md shadow-lg border border-slate-200"
           >
             <DropdownMenuItem asChild>
-              <a
-                href="#"
+              <Link
+                href="/settings"
                 className="flex items-center gap-3 p-2 cursor-pointer hover:bg-slate-200 rounded-sm"
               >
-                <User2 size={16} />
-                <span>Meu Perfil</span>
-              </a>
+                <Settings size={16} />
+                <span>Configurações</span>
+              </Link>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              {/* 2. Use a função signOut no onClick */}
               <a
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center gap-3 p-2 text-red-500 cursor-pointer hover:bg-slate-200 rounded-sm"
               >
                 <LogOut size={16} />
-                <span >Sair</span>
+                <span>Sair</span>
               </a>
             </DropdownMenuItem>
           </DropdownMenuContent>

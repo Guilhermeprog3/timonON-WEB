@@ -23,13 +23,12 @@ const passwordSchema = z
   })
 
 interface PasswordStepProps {
-  email: string
-  code: string
+  tokenId: string
   onSuccess: () => void
   onBack: () => void
 }
 
-export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepProps) {
+export function PasswordStep({ tokenId, onSuccess, onBack }: PasswordStepProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -46,8 +45,7 @@ export function PasswordStep({ email, code, onSuccess, onBack }: PasswordStepPro
   async function onSubmit(values: z.infer<typeof passwordSchema>) {
     setIsLoading(true)
     setError(undefined)
-
-    const response = await resetPassword(email, code, values.password);
+    const response = await resetPassword(tokenId, values.password);
 
     if (response.success) {
       onSuccess()

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Mail } from "lucide-react"
+import { Mail, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -17,13 +17,12 @@ const emailSchema = z.object({
 })
 
 interface EmailStepProps {
-  onSuccess: (email: string) => void
+  onSuccess: (email: string, tokenId: string) => void
 }
 
 export function EmailStep({ onSuccess }: EmailStepProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | undefined>()
-  const [success, setSuccess] = useState<string | undefined>()
 
   const form = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -35,20 +34,15 @@ export function EmailStep({ onSuccess }: EmailStepProps) {
   async function onSubmit(values: z.infer<typeof emailSchema>) {
     setIsLoading(true)
     setError(undefined)
-    setSuccess(undefined)
 
     const response = await requestPasswordReset(values.email);
 
-    if (response.success) {
-      setSuccess(response.message)
-      setTimeout(() => {
-        onSuccess(values.email)
-      }, 1500)
+    if (response.success && response.tokenId) {
+      onSuccess(values.email, response.tokenId)
     } else {
       setError(response.message)
+      setIsLoading(false)
     }
-    
-    setIsLoading(false)
   }
 
   return (
@@ -60,12 +54,6 @@ export function EmailStep({ onSuccess }: EmailStepProps) {
         </Alert>
       )}
 
-      {success && (
-        <Alert className="bg-green-50 border-green-200">
-          <AlertTitle className="text-green-800">Sucesso</AlertTitle>
-          <AlertDescription className="text-green-700">{success}</AlertDescription>
-        </Alert>
-      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -95,7 +83,12 @@ export function EmailStep({ onSuccess }: EmailStepProps) {
             className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
             disabled={isLoading}
           >
-            {isLoading ? "Enviando..." : "Enviar Código de Recuperação"}
+            {isLoading ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                </>
+            ) : "Enviar Código de Recuperação"}
           </Button>
         </form>
       </Form>

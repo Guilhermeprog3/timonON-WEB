@@ -14,9 +14,9 @@ const PrivateLayout = async ({ children }: { children: ReactNode }) => {
     return null;
   }
 
-  const userRole = session.user.role 
+  const { name, role } = session.user;
 
-  if (!userRole) {
+  if (!role) {
     console.error("PERMISSÃO (ROLE) NÃO ENCONTRADA NA SESSÃO. REDIRECIONANDO PARA LOGIN.");
     redirect("/");
     return null;
@@ -25,7 +25,7 @@ const PrivateLayout = async ({ children }: { children: ReactNode }) => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen min-w-full">
-        <AppSidebar userRole={userRole} />
+        <AppSidebar userName={name ?? 'Usuário'} userRole={role} />
         <div className="flex w-full flex-col">
           <Header />
           <main className="flex-1 bg-slate-50 p-6">{children}</main>

@@ -15,18 +15,19 @@ import { validateResetCode } from "./action"
 const codeSchema = z.object({
   code: z
     .string()
-    .min(6, { message: "O código deve ter 6 dígitos" })
-    .max(6, { message: "O código deve ter 6 dígitos" })
+    .min(4, { message: "O código deve ter 4 dígitos" })
+    .max(4, { message: "O código deve ter 4 dígitos" })
     .regex(/^\d+$/, { message: "O código deve conter apenas números" }),
 })
 
 interface CodeStepProps {
   email: string
-  onSuccess: (code: string) => void
+  tokenId: string
+  onSuccess: (verifiedCode: string) => void
   onBack: () => void
 }
 
-export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
+export function CodeStep({ email, tokenId, onSuccess, onBack }: CodeStepProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | undefined>()
 
@@ -41,12 +42,12 @@ export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
     setIsLoading(true)
     setError(undefined)
 
-    const response = await validateResetCode(email, values.code);
-    
+    const response = await validateResetCode(tokenId, values.code);
+
     if (response.success) {
-      onSuccess(values.code)
+      onSuccess(values.code);
     } else {
-      setError(response.message)
+      setError(response.message);
     }
 
     setIsLoading(false)
@@ -61,11 +62,10 @@ export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
         </Alert>
       )}
 
-      <Alert className="bg-secondary/20 border-secondary">
-        <AlertTitle className="text-primary font-semibold">Código enviado!</AlertTitle>
-        <AlertDescription className="text-primary/80">
-          Enviamos um código de verificação para <strong>{email}</strong>. Por favor, verifique sua caixa de entrada e
-          digite o código abaixo.
+      <Alert className="bg-secondary/20 border-secondary text-center py-3">
+        <AlertDescription className="text-primary/90 text-sm flex items-center justify-center flex-wrap gap-x-1.5">
+          <span>Código enviado para:</span>
+          <strong>{email}</strong>
         </AlertDescription>
       </Alert>
 
@@ -81,9 +81,9 @@ export function CodeStep({ email, onSuccess, onBack }: CodeStepProps) {
                   <div className="relative">
                     <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Digite o código de 6 dígitos"
+                      placeholder="Digite o código de 4 dígitos"
                       className="pl-10 border-secondary/50 focus-visible:ring-secondary text-center tracking-widest font-mono"
-                      maxLength={6}
+                      maxLength={4}
                       {...field}
                       disabled={isLoading}
                     />

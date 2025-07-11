@@ -13,31 +13,20 @@ export function SuccessStep() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          router.push("/")
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [router])
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (countdown === 0) {
+      router.push("/");
+    }
+  }, [countdown, router]);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-center">
-        <div className="relative">
-          <div className="rounded-full bg-green-100 p-4 animate-pulse">
-            <CheckCircle2 className="h-12 w-12 text-green-600" />
-          </div>
-          <div className="absolute -top-1 -right-1 rounded-full bg-secondary p-1">
-            <Shield className="h-4 w-4 text-primary" />
-          </div>
-        </div>
-      </div>
-
       <Alert className="bg-green-50 border-green-200 text-center">
         <Check className="h-4 w-4 mx-auto mb-2" />
         <AlertTitle className="text-green-800 font-semibold text-center">Recuperação Concluída com Sucesso!</AlertTitle>
@@ -46,18 +35,6 @@ export function SuccessStep() {
           de Timon.
         </AlertDescription>
       </Alert>
-
-      <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-4 space-y-2">
-        <h3 className="font-medium text-primary flex items-center gap-2">
-          <Shield className="h-4 w-4" />
-          Dicas de Segurança
-        </h3>
-        <ul className="text-sm text-primary/80 space-y-1">
-          <li>• Mantenha sua senha segura e não a compartilhe</li>
-          <li>• Use uma senha forte com letras, números e símbolos</li>
-          <li>• Faça logout sempre que terminar de usar o sistema</li>
-        </ul>
-      </div>
 
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
