@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ComplaintDetailsData } from "@/app/types/complaint";
+import { ComplaintDetailsData, ComplaintUpdate } from "@/app/types/complaint"; // Importado ComplaintUpdate
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { markAsInProgress, markAsResolved } from "./action";
@@ -26,6 +26,35 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
     const [updateStatus, setUpdateStatus] = React.useState<Status>(complaint.status);
     const [updateComment, setUpdateComment] = React.useState("");
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    const displayUpdates = React.useMemo(() => {
+        const allEvents: ComplaintUpdate[] = [];
+
+        allEvents.push({
+            id: 'creation-event',
+            timestamp: complaint.creation_date,
+            status: 'Pendente',
+            comment: 'Reclamação registrada pelo cidadão.',
+            userName: complaint.citizen.name,
+        });
+
+        if (complaint.comment && complaint.status === 'Em Andamento' && complaint.updates.length === 0) {
+            allEvents.push({
+                id: 'first-admin-comment',
+                timestamp: complaint.updatedAt,
+                status: 'Em Andamento',
+                comment: complaint.comment,
+                userName: 'Administração',
+            });
+        }
+        
+        allEvents.push(...complaint.updates);
+        
+        allEvents.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+        return allEvents;
+    }, [complaint]);
+
 
     const getStatusVariant = (status: string): "destructive" | "default" | "secondary" | "outline" => {
         if (status === 'Pendente') return 'destructive';
@@ -93,6 +122,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                                 <h3 className="text-sm font-semibold mb-1">Descrição</h3>
                                 <p className="text-sm text-muted-foreground">{complaint.description}</p>
                             </div>
+                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <h3 className="text-sm font-semibold mb-1">Data de Registro</h3>
@@ -185,8 +215,8 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                             <CardTitle>Histórico de Atualizações</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 p-6">
-                            {complaint.updates.length > 0 ? complaint.updates.map((update, index) => (
-                               <div key={update.id} className={`text-sm ${index > 0 ? 'border-t pt-4' : ''}`}>
+                            {displayUpdates.length > 0 ? displayUpdates.map((update, index) => (
+                               <div key={update.id} className={`text-sm ${index > 0 ? 'border-t pt-4 mt-4' : ''}`}>
                                     <div className="flex justify-between items-center mb-1">
                                        <span className="font-semibold">{update.userName}</span>
                                        <span className="text-xs text-muted-foreground">{new Date(update.timestamp).toLocaleString('pt-BR')}</span>

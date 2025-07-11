@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation" // Importado
+import { useRouter } from "next/navigation"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -55,8 +55,6 @@ export function ComplaintsList() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = React.useState('');
 
-  // A definição das colunas foi movida para dentro do componente
-  // para ter acesso ao 'router'
   const columns: ColumnDef<Complaint>[] = [
       { accessorKey: 'id', header: 'ID' },
       { accessorKey: 'title', header: 'Título' },
@@ -89,7 +87,7 @@ export function ComplaintsList() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push(`/complaints/${row.original.id}`)} // Ação de clique adicionada
+              onClick={() => router.push(`/complaints/${row.original.id}`)}
             >
               <Eye className="h-4 w-4" />
             </Button>

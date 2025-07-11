@@ -8,6 +8,7 @@ import {
   LogOut,
   ChevronUp,
   Building,
+  Image as ImageIcon, 
 } from 'lucide-react';
 import {
   Sidebar,
@@ -50,6 +51,12 @@ const allItems = [
         roles: ['SUPERADMIN', 'ADMIN']
     },
     {
+        title: 'Banners',
+        url: '/banners',
+        icon: ImageIcon,
+        roles: ['SUPERADMIN', 'ADMIN']
+    },
+    {
         title: 'Users',
         url: '/users',
         icon: Users,
@@ -88,8 +95,8 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
                 const isActive = pathname.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
+                    <SidebarMenuButton
+                      asChild
                       className={`flex items-center gap-3 rounded-md px-3 py-2 transition-all hover:bg-indigo-800 ${isActive ? 'bg-indigo-700 font-semibold' : ''}`}
                     >
                       <Link href={item.url}>

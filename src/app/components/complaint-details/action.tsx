@@ -1,3 +1,4 @@
+// src/app/components/complaint-details/action.tsx
 "use server"
 
 import { api } from "@/app/service/server";
@@ -21,10 +22,12 @@ interface ApiResponse {
   status: string;
   category?: { name: string };
   createdAt: string;
+  updatedAt: string;
   address: string;
   latitude: number | null;
   longitude: number | null;
   publicUrl: string | null;
+  comment?: string | null;
   user?: {
     name: string;
     email: string;
@@ -36,6 +39,7 @@ interface ApiResponse {
 function normalizeStatus(status: string): Status {
     if (!status) return "Pendente";
     const normalized = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    if (normalized === "Em andamento") return "Em Andamento";
     return normalized as Status;
 }
 
@@ -51,10 +55,12 @@ function mapApiToComplaintDetails(data: ApiResponse): ComplaintDetailsData {
         status: normalizeStatus(data.status),
         category: data.category?.name ?? 'Não categorizado',
         creation_date: data.createdAt,
+        updatedAt: data.updatedAt, // <-- CORREÇÃO: Linha adicionada
         address: data.address,
         latitude: data.latitude,
         longitude: data.longitude,
         photo_url: data.publicUrl,
+        comment: data.comment,
         citizen: {
             name: data.user?.name ?? 'Não informado',
             email: data.user?.email ?? 'Não informado',
@@ -97,10 +103,10 @@ export async function markAsInProgress(id: string, comment: string) {
     const token = (await cookies()).get("JWT")?.value;
     if (!token) throw new Error("Token não encontrado.");
     try {
-        await api.put(`/post/${id}/in-progress`, { comment }, {
+        await api.patch(`/post/${id}/in-progress`, { comment }, {
             headers: { Authorization: `Bearer ${token}` }
         });
-        revalidatePath(`/complaints/${id}`);
+        revalidatePath(`/complaintDetails/${id}`);
     } catch (error) {
         throw new Error(handleApiError(error).message);
     }
@@ -110,10 +116,10 @@ export async function markAsResolved(id: string, comment: string) {
     const token = (await cookies()).get("JWT")?.value;
     if (!token) throw new Error("Token não encontrado.");
     try {
-        await api.put(`/post/${id}/complete`, { comment }, {
+        await api.patch(`/post/${id}/complete`, { comment }, {
             headers: { Authorization: `Bearer ${token}` }
         });
-        revalidatePath(`/complaints/${id}`);
+        revalidatePath(`/complaintDetails/${id}`);
     } catch (error) {
         throw new Error(handleApiError(error).message);
     }
