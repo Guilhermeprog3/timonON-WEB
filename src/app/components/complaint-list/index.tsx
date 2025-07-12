@@ -30,6 +30,7 @@ import type { Complaint } from "@/app/types/complaint"
 import { getComplaints, getCategories, deleteComplaint } from "./action"
 import { DateRange } from "react-day-picker"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import * as XLSX from 'xlsx';
 
 const dateBetweenFilterFn: FilterFn<any> = (row, columnId, value) => {
     const date = new Date(row.getValue(columnId));
@@ -177,7 +178,18 @@ export function ComplaintsList() {
   }
 
   const exportComplaints = () => {
-    console.log("Exportando reclamações...")
+    const dataToExport = table.getFilteredRowModel().rows.map(row => ({
+      ID: row.original.id,
+      Título: row.original.title,
+      Categoria: row.original.category,
+      Status: row.original.status,
+      Data: new Date(row.original.date).toLocaleDateString("pt-BR"),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reclamações");
+    XLSX.writeFile(workbook, "reclamacoes.xlsx");
   }
 
   return (
@@ -187,7 +199,7 @@ export function ComplaintsList() {
         <p className="text-sm text-slate-600">Filtre, visualize e gerencie todas as reclamações registradas no sistema.</p>
       </div>
 
-      <Card>
+      <Card className="pb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -195,88 +207,88 @@ export function ComplaintsList() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-              <Input
-                placeholder="Buscar por título ou ID da reclamação..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSearch();
-                    }
-                }}
-                className="pl-10"
-              />
-            </div>
-
-            <Select value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Status</SelectItem>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                <SelectItem value="Resolvido">Resolvido</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={(table.getColumn("category")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("category")?.setFilterValue(value === "all" ? "" : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Categorias</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn("justify-start text-left font-normal w-full", !dateRange?.from && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>{format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} - {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}</>
-                    ) : (
-                      format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
-                    )
-                  ) : (
-                    "Filtrar por data"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Input
+                  placeholder="Buscar por título ou ID da reclamação..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSearch();
+                      }
+                  }}
+                  className="pl-10"
                 />
-              </PopoverContent>
-            </Popover>
-          </div>
+              </div>
+               <Button onClick={handleSearch} className="w-full md:w-auto">
+                  <Search className="h-4 w-4 mr-2" />
+                  Aplicar Busca
+                </Button>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+                <Select value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="Pendente">Pendente</SelectItem>
+                    <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                    <SelectItem value="Resolvido">Resolvido</SelectItem>
+                  </SelectContent>
+                </Select>
 
-          <div className="flex justify-end mt-4 gap-2">
-            <Button variant="outline" onClick={clearFilters} className="ml-2">
-              Limpar Filtros
-            </Button>
-            <Button onClick={handleSearch}>
-              <Search className="h-4 w-4 mr-2" />
-              Aplicar Busca
-            </Button>
+                <Select value={(table.getColumn("category")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("category")?.setFilterValue(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Categorias</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn("text-left font-normal w-full md:w-auto", !dateRange?.from && "text-muted-foreground")}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange?.from ? (
+                        dateRange.to ? (
+                          <>{format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} - {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}</>
+                        ) : (
+                          format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
+                        )
+                      ) : (
+                        "Filtrar por data"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
+                 <Button variant="outline" onClick={clearFilters} className="w-full md:w-auto">
+                    Limpar Filtros
+                 </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

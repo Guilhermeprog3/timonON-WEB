@@ -2,7 +2,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { MessageCircle, Clock, CheckCircle, AlertTriangle, TrendingUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface DashboardProps {
   data: {
@@ -14,13 +15,21 @@ interface DashboardProps {
       id: string;
       title: string;
       status: "Pendente" | "Em Andamento" | "Resolvido";
-      neighborhood: string;
+      address: string;
       createdAt: string;
+    }[];
+    mostReported: {
+      id: string;
+      title: string;
+      complaints: number;
+      address: string;
     }[];
   };
 }
 
 export function Dashboard({ data }: DashboardProps) {
+  const router = useRouter(); // Hook para navegação
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Pendente":
@@ -49,47 +58,86 @@ export function Dashboard({ data }: DashboardProps) {
         <StatCard icon={<CheckCircle />} label="Resolvidas" value={data.resolvidas} description="Reclamações finalizadas" />
       </div>
 
-      <Card className="mt-6">
-  <CardHeader className="pt-4 pb-2 flex flex-row items-start justify-between">
-    <div>
-      <CardTitle className="text-lg text-slate-900 font-semibold">Reclamações Recentes</CardTitle>
-      <p className="text-sm text-slate-500">As últimas reclamações registradas no sistema.</p>
-    </div>
-    <a
-      href="/complaint"
-      className="text-sm text-indigo-600 hover:underline font-medium flex items-center gap-1 mt-1"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5h6m2 0a2 2 0 012 2v0a2 2 0 01-2 2H9m0 0H7a2 2 0 01-2-2v0a2 2 0 012-2h2zm0 4v10m0 0h6m-6 0a2 2 0 01-2-2v0a2 2 0 012-2h6a2 2 0 012 2v0a2 2 0 01-2 2h-6z" />
-      </svg>
-      Ver Todas
-    </a>
-  </CardHeader>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <Card>
+            <CardHeader className="pt-4 pb-2 flex flex-row items-start justify-between">
+                <div>
+                <CardTitle className="text-lg text-slate-900 font-semibold">Reclamações Recentes</CardTitle>
+                <p className="text-sm text-slate-500">As últimas reclamações registradas no sistema.</p>
+                </div>
+                <a
+                href="/complaint"
+                className="text-sm text-indigo-600 hover:underline font-medium flex items-center gap-1 mt-1"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5h6m2 0a2 2 0 012 2v0a2 2 0 01-2 2H9m0 0H7a2 2 0 01-2-2v0a2 2 0 012-2h2zm0 4v10m0 0h6m-6 0a2 2 0 01-2-2v0a2 2 0 012-2h6a2 2 0 012 2v0a2 2 0 01-2 2h-6z" />
+                </svg>
+                Ver Todas
+                </a>
+            </CardHeader>
 
-  <CardContent className="space-y-4 px-6 pb-6">
-    {data.recentes.map((rec) => (
-      <div key={rec.id} className="border-b pb-2 flex justify-between items-start">
-        <div>
-          <div className="text-slate-900 font-semibold flex items-center gap-2">
-            {rec.title}
-            <Badge className={getStatusColor(rec.status)}>{rec.status}</Badge>
-          </div>
-          <div className="text-sm text-slate-600">
-            ID: {rec.id} • Bairro: {rec.neighborhood}
-          </div>
-        </div>
-        <div className="text-sm text-slate-500 mt-1 whitespace-nowrap">
-          {new Date(rec.createdAt).toLocaleDateString("pt-BR")}
-        </div>
+            <CardContent className="space-y-1 px-4 pb-4">
+                {data.recentes.map((rec) => (
+                  <div 
+                    key={rec.id} 
+                    className="border-b last:border-b-0 py-2 px-2 flex justify-between items-start cursor-pointer hover:bg-slate-100 rounded-md"
+                    onClick={() => router.push(`/complaintDetails/${rec.id}`)}
+                  >
+                    <div>
+                      <div className="text-slate-900 font-semibold flex items-center gap-2">
+                          {rec.title}
+                          <Badge className={getStatusColor(rec.status)}>{rec.status}</Badge>
+                      </div>
+                      <div className="text-sm text-slate-600">
+                          ID: {rec.id} • Endereço: {rec.address}
+                      </div>
+                    </div>
+                    <div className="text-sm text-slate-500 mt-1 whitespace-nowrap">
+                      {new Date(rec.createdAt).toLocaleDateString("pt-BR")}
+                    </div>
+                  </div>
+                ))}
+
+                {data.recentes.length === 0 && (
+                  <div className="text-slate-500 text-sm p-5 text-center">Nenhuma reclamação recente encontrada.</div>
+                )}
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader className="pt-4 pb-2">
+                <CardTitle className="text-lg text-slate-900 font-semibold flex items-center gap-2">
+                    <TrendingUp />
+                    Mais Denunciadas
+                </CardTitle>
+                <p className="text-sm text-slate-500">Reclamações com mais denúncias.</p>
+            </CardHeader>
+            <CardContent className="space-y-1 px-4 pb-4">
+                {data.mostReported.map((rec) => (
+                    <div 
+                      key={rec.id} 
+                      className="border-b last:border-b-0 py-2 px-2 flex justify-between items-start cursor-pointer hover:bg-slate-100 rounded-md"
+                      onClick={() => router.push(`/complaintDetails/${rec.id}`)}
+                    >
+                        <div>
+                          <div className="text-slate-900 font-semibold">
+                              {rec.title}
+                          </div>
+                          <div className="text-sm text-slate-600">
+                              Endereço: {rec.address}
+                          </div>
+                        </div>
+                        <div className="text-sm text-red-500 mt-1 whitespace-nowrap font-bold">
+                            {rec.complaints} {rec.complaints === 1 ? 'denúncia' : 'denúncias'}
+                        </div>
+                    </div>
+                ))}
+                 {data.mostReported.length === 0 && (
+                    <div className="text-slate-500 text-sm p-5 text-center">Nenhuma reclamação com múltiplas denúncias.</div>
+                )}
+            </CardContent>
+        </Card>
       </div>
-    ))}
-
-    {data.recentes.length === 0 && (
-      <div className="text-slate-500 text-sm pb-5">Nenhuma reclamação recente encontrada.</div>
-    )}
-  </CardContent>
-</Card>
-
     </>
   );
 }

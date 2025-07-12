@@ -1,10 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"; // Ícones adicionados
 import {
-  sendResetCode,
-  confirmResetCode,
-} from "./passwordActions"
+  requestPasswordReset,
+  validateResetCode,
+  resetPassword
+} from "../password-reset/action";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface PasswordResetModalProps {
   open: boolean
@@ -13,69 +17,86 @@ interface PasswordResetModalProps {
 }
 
 export function PasswordResetModal({ open, onClose, email }: PasswordResetModalProps) {
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [code, setCode] = useState("")
-  const [id, setId] = useState("")
-  const [newPassword, setNewPasswordState] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [code, setCode] = useState("");
+  const [tokenId, setTokenId] = useState("");
+  const [newPassword, setNewPasswordState] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  // Estados para controlar a visibilidade da senha
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  if (!open) return null
+  const resetLocalState = () => {
+    setStep(1);
+    setCode("");
+    setTokenId("");
+    setNewPasswordState("");
+    setConfirmPassword("");
+    setLoading(false);
+    setError("");
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const handleClose = () => {
+    resetLocalState();
+    onClose();
+  };
+
+  if (!open) return null;
 
   const handleSendCode = async () => {
-    setLoading(true)
-    setError("")
-    const ok = await sendResetCode(email)
-    setLoading(false)
+    setLoading(true);
+    setError("");
+    const response = await requestPasswordReset(email);
+    setLoading(false);
 
-    if (ok) setStep(2)
-    else setError("Falha ao enviar o código. Tente novamente.")
-  }
+    if (response.success && response.tokenId) {
+      setTokenId(response.tokenId);
+      setStep(2);
+    } else {
+      setError(response.message || "Falha ao enviar o código. Tente novamente.");
+    }
+  };
 
   const handleConfirmCode = async () => {
-    setLoading(true)
-    setError("")
-    const userId = await confirmResetCode(email, code)
-    setLoading(false)
+    setLoading(true);
+    setError("");
+    const response = await validateResetCode(tokenId, code);
+    setLoading(false);
 
-    if (userId) {
-      setId(userId)
-      setStep(3)
+    if (response.success) {
+      setStep(3);
     } else {
-      setError("Código inválido ou expirado.")
+      setError(response.message || "Código inválido ou expirado.");
     }
-  }
+  };
 
   const handleSetPassword = async () => {
     if (newPassword !== confirmPassword) {
-      setError("As senhas não coincidem.")
-      return
+      setError("As senhas não coincidem.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres.");
+      return;
     }
 
-    setLoading(true)
-    setError("")
+    setLoading(true);
+    setError("");
+    const response = await resetPassword(tokenId, newPassword);
+    setLoading(false);
 
-    try {
-      const res = await fetch(`https://infra-timon-on.onrender.com/restore/new-password/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: newPassword }),
-      })
-
-      setLoading(false)
-
-      if (res.ok) {
-        alert("Senha alterada com sucesso!")
-        onClose()
-      } else {
-        setError("Erro ao salvar nova senha.")
-      }
-    } catch (error) {
-      setLoading(false)
-      setError("Erro ao se comunicar com o servidor.")
+    if (response.success) {
+      alert("Senha alterada com sucesso!");
+      handleClose();
+    } else {
+      setError(response.message || "Erro ao salvar nova senha.");
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -83,7 +104,7 @@ export function PasswordResetModal({ open, onClose, email }: PasswordResetModalP
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-semibold text-slate-800">Alterar Senha</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-slate-500 hover:text-slate-700 transition"
           >
             ✕
@@ -95,7 +116,7 @@ export function PasswordResetModal({ open, onClose, email }: PasswordResetModalP
         {step === 1 && (
           <div className="space-y-4">
             <p className="text-sm text-slate-600">
-              Deseja receber um código de verificação no seu e-mail?
+              Um código de verificação será enviado para o seu e-mail ({email}) para prosseguir com a alteração da senha.
             </p>
             <button
               onClick={handleSendCode}
@@ -110,13 +131,14 @@ export function PasswordResetModal({ open, onClose, email }: PasswordResetModalP
         {step === 2 && (
           <div className="space-y-4">
             <label className="text-sm text-slate-700 block">
-              Digite o código recebido:
+              Digite o código de 4 dígitos recebido:
             </label>
             <input
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              maxLength={4}
             />
             <button
               onClick={handleConfirmCode}
@@ -130,20 +152,48 @@ export function PasswordResetModal({ open, onClose, email }: PasswordResetModalP
 
         {step === 3 && (
           <div className="space-y-4">
-            <label className="text-sm text-slate-700 block">Nova senha:</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPasswordState(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <label className="text-sm text-slate-700 block">Confirmar nova senha:</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+            <div>
+              <label className="text-sm text-slate-700 block">Nova senha:</label>
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPasswordState(e.target.value)}
+                  className="w-full pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-sm text-slate-700 block">Confirmar nova senha:</label>
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
             <button
               onClick={handleSetPassword}
               disabled={loading}

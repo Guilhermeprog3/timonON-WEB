@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache"
 interface ApiPost {
   id: string;
   title: string;
-  creation_date: string;
+  createdAt: string;
   status: "Pendente" | "Em Andamento" | "Resolvido";
   category: { id: string; name: string };
 }
@@ -21,7 +21,7 @@ function mapApiToComplaint(post: ApiPost): Complaint {
     title: post.title,
     category: post.category.name,
     status: post.status,
-    date: post.creation_date,
+    date: post.createdAt
   };
 }
 

@@ -20,6 +20,7 @@ interface ApiResponse {
   description: string;
   status: string;
   category?: { name: string };
+  department?: { name: string };
   createdAt: string;
   updatedAt: string;
   address: string;
@@ -40,7 +41,8 @@ function normalizeStatus(status: string): Status {
     if (!status) return "Pendente";
     const normalized = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
     if (normalized === "Em andamento") return "Em Andamento";
-    return normalized as Status;
+    if (normalized === "Resolvido") return "Resolvido";
+    return "Pendente";
 }
 
 function mapApiToComplaintDetails(data: ApiResponse): ComplaintDetailsData {
@@ -54,6 +56,7 @@ function mapApiToComplaintDetails(data: ApiResponse): ComplaintDetailsData {
         description: data.description,
         status: normalizeStatus(data.status),
         category: data.category?.name ?? 'Não categorizado',
+        department: data.department?.name ?? 'Não informado',
         creation_date: data.createdAt,
         updatedAt: data.updatedAt,
         address: data.address,

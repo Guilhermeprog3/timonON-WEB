@@ -6,5 +6,5 @@ export interface AdminData {
   department: {
     id: number;
     name: string;
-  };
+  } | null;
 }

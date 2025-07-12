@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react";
-import { ArrowLeft, Trash2, MapPin } from "lucide-react";
+import { ArrowLeft, Trash2, MapPin, Building, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge"; // Import badgeVariants
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ComplaintDetailsData, ComplaintUpdate } from "@/app/types/complaint";
@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { markAsInProgress, markAsResolved, deleteComplaint } from "./action";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { VariantProps } from "class-variance-authority";
 
 const ComplaintMap = dynamic(() => import('./map'), { ssr: false });
 
@@ -39,34 +40,30 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
             userName: complaint.citizen.name,
         });
 
-        if (complaint.comment && complaint.status === 'Em Andamento' && complaint.updates.length === 0) {
-            allEvents.push({
-                id: 'first-admin-comment',
+        if (complaint.status !== 'Pendente' || complaint.comment) {
+             allEvents.push({
+                id: 'latest-update-event',
                 timestamp: complaint.updatedAt,
-                status: 'Em Andamento',
-                comment: complaint.comment,
+                status: complaint.status,
+                comment: complaint.comment || `Status alterado para "${complaint.status}"`,
                 userName: 'Administração',
             });
         }
         
-        allEvents.push(...complaint.updates);
-        
-        allEvents.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
         return allEvents;
     }, [complaint]);
 
-
-    const getStatusVariant = (status: string): "destructive" | "default" | "secondary" | "outline" => {
+    // Função de cores atualizada
+    const getStatusVariant = (status: string): VariantProps<typeof badgeVariants>["variant"] => {
         if (status === 'Pendente') return 'destructive';
-        if (status === 'Em Andamento') return 'default';
-        if (status === 'Resolvido') return 'secondary';
+        if (status === 'Em Andamento') return 'warning';
+        if (status === 'Resolvido') return 'success';
         return 'outline';
     };
 
     const handleUpdateSubmit = async () => {
-        if (updateStatus === complaint.status && !updateComment) {
-            alert("Por favor, altere o status ou adicione um comentário para atualizar.");
+        if (updateStatus === complaint.status) {
+            alert("Para atualizar, você deve selecionar um novo status.");
             return;
         }
         
@@ -96,6 +93,8 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
             alert(result.message);
         }
     };
+    
+    const isResolved = complaint.status === 'Resolvido';
 
     return (
         <div className="space-y-6">
@@ -107,6 +106,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         <div className="flex items-center gap-2 mt-2">
                             <Badge variant={getStatusVariant(complaint.status)}>{complaint.status}</Badge>
                             <Badge variant="outline">{complaint.category}</Badge>
+                            <Badge variant="outline" className="flex items-center gap-1"><Building className="h-3 w-3" /> {complaint.department}</Badge>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -150,13 +150,17 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                                 <p className="text-sm text-muted-foreground">{complaint.description}</p>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
-                                    <h3 className="text-sm font-semibold mb-1">Data de Registro</h3>
+                                    <h3 className="text-sm font-semibold mb-1 flex items-center gap-1"><Calendar className="h-4 w-4" /> Data de Registro</h3>
                                     <p className="text-sm text-muted-foreground">{new Date(complaint.creation_date).toLocaleDateString('pt-BR')}</p>
                                 </div>
+                                 <div>
+                                    <h3 className="text-sm font-semibold mb-1 flex items-center gap-1"><Calendar className="h-4 w-4" /> Última Atualização</h3>
+                                    <p className="text-sm text-muted-foreground">{new Date(complaint.updatedAt).toLocaleDateString('pt-BR')}</p>
+                                </div>
                                 <div>
-                                    <h3 className="text-sm font-semibold mb-1">Endereço</h3>
+                                    <h3 className="text-sm font-semibold mb-1 flex items-center gap-1"><MapPin className="h-4 w-4" /> Endereço</h3>
                                     <p className="text-sm text-muted-foreground">{complaint.address}</p>
                                 </div>
                             </div>
@@ -199,27 +203,44 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         <CardContent className="space-y-4 p-6">
                            <div className="space-y-2">
                                 <label className="text-sm font-medium">Status</label>
-                                <Select value={updateStatus} onValueChange={(value) => setUpdateStatus(value as Status)}>
+                                <Select 
+                                    value={updateStatus} 
+                                    onValueChange={(value) => setUpdateStatus(value as Status)}
+                                    disabled={isResolved}
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Selecione o status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Pendente">Pendente</SelectItem>
-                                        <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                                        <SelectItem value="Resolvido">Resolvido</SelectItem>
+                                        {complaint.status === 'Pendente' && (
+                                            <>
+                                                <SelectItem value="Pendente">Pendente</SelectItem>
+                                                <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                                            </>
+                                        )}
+                                        {complaint.status === 'Em Andamento' && (
+                                            <>
+                                                <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                                                <SelectItem value="Resolvido">Resolvido</SelectItem>
+                                            </>
+                                        )}
+                                        {isResolved && (
+                                            <SelectItem value="Resolvido">Resolvido</SelectItem>
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Comentário</label>
+                                <label className="text-sm font-medium">Comentário de Atualização</label>
                                 <Textarea 
                                   placeholder="Adicione um comentário sobre a atualização..." 
                                   value={updateComment}
                                   onChange={(e) => setUpdateComment(e.target.value)}
+                                  disabled={isResolved}
                                 />
                             </div>
-                            <Button onClick={handleUpdateSubmit} disabled={isSubmitting}>
-                                {isSubmitting ? "Atualizando..." : "Atualizar"}
+                            <Button onClick={handleUpdateSubmit} disabled={isSubmitting || isResolved}>
+                                {isSubmitting ? "Atualizando..." : "Salvar Alterações"}
                             </Button>
                         </CardContent>
                     </Card>
@@ -228,7 +249,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                 <div className="lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Dados do Cidadão</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Dados do Cidadão</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm p-6">
                             <p><strong>Nome:</strong> {complaint.citizen.name}</p>

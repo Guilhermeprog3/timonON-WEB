@@ -63,7 +63,7 @@ export async function deleteDepartment(id: number): Promise<{ success: boolean; 
   if (!token) return { success: false, message: "Token não encontrado." }
 
   try {
-    await api.delete(`/departments/${id}`, {
+    await api.delete(`/department/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     revalidatePath("/departments")

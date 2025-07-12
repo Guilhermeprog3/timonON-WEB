@@ -11,7 +11,6 @@ const PrivateLayout = async ({ children }: { children: ReactNode }) => {
 
   if (!session?.user) {
     redirect("/")
-    return null;
   }
 
   const { name, role } = session.user;
@@ -19,7 +18,6 @@ const PrivateLayout = async ({ children }: { children: ReactNode }) => {
   if (!role) {
     console.error("PERMISSÃO (ROLE) NÃO ENCONTRADA NA SESSÃO. REDIRECIONANDO PARA LOGIN.");
     redirect("/");
-    return null;
   }
 
   return (

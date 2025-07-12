@@ -3,7 +3,6 @@
 import * as React from "react"
 import {
   ColumnDef,
-  ColumnFiltersState,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -47,17 +46,18 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
   const [newDepartmentName, setNewDepartmentName] = React.useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
 
-  const handleEdit = (department: Departament) => {
+  // Funções de manipulação de estado memorizadas com useCallback
+  const handleEdit = React.useCallback((department: Departament) => {
     setEditingId(department.id)
     setEditingName(department.name)
-  }
+  }, [])
 
-  const handleCancel = () => {
+  const handleCancel = React.useCallback(() => {
     setEditingId(null)
     setEditingName("")
-  }
+  }, [])
 
-  const handleSave = async (id: number) => {
+  const handleSave = React.useCallback(async (id: number) => {
     if (!editingName.trim()) {
         alert("O nome do departamento não pode estar vazio.");
         return;
@@ -68,18 +68,18 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
     } else {
       alert(result.message);
     }
-  }
+  }, [editingName])
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = React.useCallback(async (id: number) => {
     if (confirm("Tem certeza que deseja deletar este departamento?")) {
       const result = await deleteDepartment(id)
       if (result.success) {
-        setDepartments(departments.filter((d) => d.id !== id))
+        setDepartments(prev => prev.filter((d) => d.id !== id))
       } else {
         alert(result.message)
       }
     }
-  }
+  }, [])
 
   const handleAddDepartment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +97,8 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
     }
   }
 
-  const columns: ColumnDef<Departament>[] = [
+  // Definição das colunas memorizada com as dependências corretas
+  const columns = React.useMemo<ColumnDef<Departament>[]>(() => [
     {
       accessorKey: "name",
       header: "Nome do Departamento",
@@ -107,6 +108,7 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
             value={editingName}
             onChange={(e) => setEditingName(e.target.value)}
             className="border rounded px-2 py-1 text-sm w-full"
+            autoFocus
           />
         ) : (
           <div className="font-medium">{row.getValue("name")}</div>
@@ -140,7 +142,7 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
         )
       },
     },
-  ]
+  ], [editingId, editingName, handleEdit, handleCancel, handleSave, handleDelete]);
 
   const table = useReactTable({
     data: departments,

@@ -5,6 +5,7 @@ export interface Citizen {
 }
 
 export type Status = "Pendente" | "Em Andamento" | "Resolvido";
+
 export interface Complaint {
     id: string
     title: string
@@ -32,6 +33,7 @@ export interface ComplaintDetailsData {
     description: string;
     status: Status;
     category: string;
+    department: string;
     creation_date: string;
     updatedAt: string;
     address: string;
@@ -40,5 +42,5 @@ export interface ComplaintDetailsData {
     photo_url: string | null;
     citizen: Citizen;
     updates: ComplaintUpdate[];
-    comment?: string | null; // <-- Este campo é usado pela nova lógica
+    comment?: string | null;
 }
