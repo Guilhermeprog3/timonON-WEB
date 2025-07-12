@@ -7,7 +7,7 @@ import { AdminData } from "./types";
 import { Mail, Lock, Pencil } from "lucide-react";
 import { useState } from "react";
 import { PasswordResetModal } from "./PasswordResetModal";
-import { EditProfileModal } from "./EditProfileModal"; // <-- NOVO
+import { EditProfileModal } from "./EditProfileModal";
 
 interface SettingsProps {
   admin: AdminData;
@@ -15,17 +15,15 @@ interface SettingsProps {
 
 export function Settings({ admin }: SettingsProps) {
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
-  const [isEditProfileModalOpen, setEditProfileModalOpen] = useState(false); // <-- NOVO
+  const [isEditProfileModalOpen, setEditProfileModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho*/}
       <div className="bg-slate-50 p-4 rounded-lg border">
         <h1 className="text-2xl font-bold text-slate-900">Configurações</h1>
         <p className="text-slate-600 text-sm">Gerencie suas preferências e configurações de conta</p>
       </div>
 
-      {/* Card do Usuário */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -46,7 +44,6 @@ export function Settings({ admin }: SettingsProps) {
         </CardContent>
       </Card>
 
-      {/* Card da Conta */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">Conta</CardTitle>
@@ -77,7 +74,6 @@ export function Settings({ admin }: SettingsProps) {
         </CardContent>
       </Card>
 
-      {/* Modais */}
       <PasswordResetModal
         open={isPasswordModalOpen}
         onClose={() => setPasswordModalOpen(false)}

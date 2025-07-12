@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { AxiosError } from "axios";
 
-// ... (interfaces ApiResponse e ApiUpdate - sem alterações)
 interface ApiUpdate {
   id: string;
   update_date: string;
@@ -37,7 +36,6 @@ interface ApiResponse {
 }
 
 
-// ... (função normalizeStatus - sem alterações)
 function normalizeStatus(status: string): Status {
     if (!status) return "Pendente";
     const normalized = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
@@ -45,7 +43,6 @@ function normalizeStatus(status: string): Status {
     return normalized as Status;
 }
 
-// ... (função mapApiToComplaintDetails - sem alterações)
 function mapApiToComplaintDetails(data: ApiResponse): ComplaintDetailsData {
     if (!data) {
         throw new Error("Tentativa de mapear dados de reclamação indefinidos.");
@@ -89,20 +86,16 @@ export async function getComplaintById(id: string): Promise<ComplaintDetailsData
         });
         return mapApiToComplaintDetails(response.data);
     } catch (error) {
-        // **CORREÇÃO APLICADA AQUI**
-        // Verifica se o erro é do Axios e se o status é 404.
         if (error instanceof AxiosError && error.response?.status === 404) {
-            // Se for 404 (Não Encontrado), apenas retorna nulo sem logar erro.
-            // Isso é esperado após a exclusão.
+
             return null;
         }
-        // Para qualquer outro erro, loga como uma falha real.
+
         console.error("Falha ao buscar detalhes da reclamação:", error);
         return null;
     }
 }
 
-// ... (Restante do arquivo: handleApiError, markAsInProgress, markAsResolved, deleteComplaint - sem alterações)
 function handleApiError(error: unknown): { message: string } {
     if (error instanceof AxiosError && error.response) {
         return { message: error.response.data?.message || "Ocorreu um erro desconhecido." };

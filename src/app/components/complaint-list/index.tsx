@@ -27,7 +27,7 @@ import { format, isAfter, isBefore, isValid } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import type { Complaint } from "@/app/types/complaint"
-import { getComplaints, getCategories, deleteComplaint } from "./action" // Importa a nova action
+import { getComplaints, getCategories, deleteComplaint } from "./action"
 import { DateRange } from "react-day-picker"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 

@@ -1,4 +1,3 @@
-// src/app/components/settings/passwordActions.tsx
 
 import { cookies } from "next/headers";
 
@@ -10,7 +9,7 @@ export async function sendResetCode(email: string): Promise<boolean> {
       body: JSON.stringify({ email }),
     });
 
-    const text = await res.text(); // <- isso captura qualquer resposta da API
+    const text = await res.text();
     console.log("Resposta da API /restore/send:", res.status, text);
 
     return res.ok;

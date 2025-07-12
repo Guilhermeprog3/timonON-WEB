@@ -1,4 +1,3 @@
-// src/app/types/complaint.ts
 export interface Citizen {
     name: string;
     email: string;

@@ -1,4 +1,3 @@
-// src/app/types/next-auth.d.ts
 import NextAuth, { DefaultSession, DefaultUser } from "next-auth"
 import { JWT, DefaultJWT } from "next-auth/jwt"
 
@@ -9,20 +8,21 @@ declare module "next-auth" {
       role: string;
       departmentId: number | null;
     } & DefaultSession["user"];
-    accessToken: string; // ✅ incluído
+    accessToken: string;
   }
 
   interface User extends DefaultUser {
     role: string;
     departmentId: number | null;
-    accessToken: string; // ✅ incluído
+    accessToken: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
+    id: string;
     role: string;
     departmentId: number | null;
-    accessToken: string; // ✅ incluído
+    accessToken: string;
   }
 }

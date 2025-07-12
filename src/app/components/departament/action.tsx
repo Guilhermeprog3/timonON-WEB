@@ -25,9 +25,7 @@ export async function createDepartment(name: string): Promise<{ success: boolean
   if (!token) return { success: false, message: "Token não encontrado." }
 
   try {
-    const response = await api.post(
-      "/departments",
-      { name },
+    const response = await api.post("/department",{ name },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -45,8 +43,8 @@ export async function updateDepartment(id: number, name: string): Promise<{ succ
   if (!token) return { success: false, message: "Token não encontrado." }
 
   try {
-    const response = await api.put(
-      `/departments/${id}`,
+    const response = await api.patch(
+      `/department/${id}`,
       { name },
       {
         headers: { Authorization: `Bearer ${token}` },

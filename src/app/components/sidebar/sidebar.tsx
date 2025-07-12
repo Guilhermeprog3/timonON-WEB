@@ -86,7 +86,6 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      {/* Restaurado o esquema de cores original */}
       <SidebarContent className="bg-indigo-900 text-white flex flex-col">
         <SidebarGroup>
           <SidebarGroupContent>

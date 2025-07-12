@@ -91,11 +91,8 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
         const result = await deleteComplaint(complaint.id);
         
         if (result.success) {
-            // **CORREÇÃO APLICADA AQUI**
-            // Redireciona PRIMEIRO para evitar que a página atual tente recarregar dados que não existem mais.
             router.push('/complaint');
         } else {
-            // Se a exclusão falhar, exibe a mensagem de erro.
             alert(result.message);
         }
     };

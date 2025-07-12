@@ -1,4 +1,3 @@
-// src/app/components/settings/PasswordResetModal.tsx
 "use client"
 
 import { useState } from "react"

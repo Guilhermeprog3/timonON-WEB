@@ -45,31 +45,33 @@ export function EditProfileModal({
         return;
       }
 
-      const res = await fetch("https://infra-timon-on.onrender.com/admin", {
+      const payload: { name: string; email: string; password?: string } = {
+        name,
+        email,
+      };
+
+      if (password) {
+        payload.password = password;
+      }
+
+      const res = await fetch(`https://infra-timon-on.onrender.com/admin/${admin.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role: "ADMIN",
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const texto = await res.text();
-      console.log("Status da resposta:", res.status);
-      console.log("Texto da resposta:", texto);
-
       if (!res.ok) {
-        alert("Erro ao atualizar: " + texto);
+        const error = await res.json();
+        alert("Erro ao atualizar: " + (error.message || 'Erro desconhecido'));
         return;
       }
 
       alert("Informações atualizadas com sucesso!");
       onClose();
+      window.location.reload();
     } catch (error) {
       console.error("Erro na requisição:", error);
       alert("Erro inesperado ao atualizar.");
@@ -104,7 +106,7 @@ export function EditProfileModal({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha atual"
+              placeholder="Digite sua senha atual para alterar"
             />
           </div>
         </div>

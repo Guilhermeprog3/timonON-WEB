@@ -1,4 +1,3 @@
-// src/app/(private_pages)/settings/page.tsx
 import { Settings } from "@/app/components/settings";
 import { getAdminData } from "@/app/components/settings/action";
 

@@ -7,39 +7,32 @@ import { AdminData } from "./types";
 export async function getAdminData(): Promise<AdminData | null> {
   const session = await getServerSession(authOptions);
 
-  console.log("Session recebida:", session);
-  console.log("Token usado no Authorization:", session?.accessToken);
-
-  if (!session || !session.accessToken) {
-    console.error("Sessão inválida ou token ausente.");
+  if (!session?.user?.id) {
+    console.error("ID do usuário não encontrado na sessão.");
     return null;
   }
-
+  if (!session.accessToken) {
+    console.error("Token de acesso não encontrado na sessão.");
+    return null;
+  }
+  
   try {
-    const res = await fetch("https://infra-timon-on.onrender.com/admin", {
+    const res = await fetch(`https://infra-timon-on.onrender.com/admin/${session.user.id}`, {
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
       },
       cache: "no-store",
     });
 
-    console.log("Status da resposta da API:", res.status);
-
     if (!res.ok) {
       const texto = await res.text();
-      console.error("Resposta de erro da API:", texto);
+      console.error(`Erro ao buscar dados do admin (ID: ${session.user.id}):`, texto);
       return null;
     }
 
     const data = await res.json();
-    console.log("Dados recebidos da API:", data);
-
-    if (Array.isArray(data) && data.length > 0) {
-      return data[0] as AdminData;
-    } else {
-      console.error("Resposta da API não contém dados de admin.");
-      return null;
-    }
+    return data as AdminData;
+    
   } catch (error) {
     console.error("Erro inesperado ao buscar dados do admin:", error);
     return null;
