@@ -2,18 +2,17 @@
 
 import { Admin, Departament } from "@/app/types/user";
 import { cookies } from 'next/headers';
-
+import { revalidatePath } from 'next/cache';
 
 export async function getUsersWithDepartments(): Promise<{
   users: Admin[];
   departamentos: Departament[];
 }> {
-
-  
-
   const token = (await cookies()).get("JWT")?.value;
-  console.log('TOKENNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN', token);
-  console.log('TOKEN', token);
+
+  if (!token) {
+    return { users: [], departamentos: [] };
+  }
 
   const [usersRes, deptsRes] = await Promise.all([
     fetch('https://infra-timon-on.onrender.com/admin', {
@@ -31,13 +30,38 @@ export async function getUsersWithDepartments(): Promise<{
   ]);
 
   const users = await usersRes.json();
-  console.log('USERS', users);
-  
   const departamentos = await deptsRes.json();
 
   return {
     users,
-    departamentos: departamentos
-    
+    departamentos,
   };
+}
+
+export async function deactivateUser(id: number): Promise<{ success: boolean; message: string }> {
+  const token = (await cookies()).get("JWT")?.value;
+  if (!token) {
+    return { success: false, message: "Token não encontrado." };
+  }
+
+  try {
+    const response = await fetch(`https://infra-timon-on.onrender.com/admin/${id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 204) {
+      revalidatePath("/users");
+      return { success: true, message: "Administrador inativado com sucesso!" };
+    }
+
+    const errorData = await response.json();
+    return { success: false, message: errorData.message || "Erro ao inativar administrador." };
+
+  } catch (error) {
+    console.error("Falha ao inativar administrador:", error);
+    return { success: false, message: "Ocorreu um erro de rede." };
+  }
 }

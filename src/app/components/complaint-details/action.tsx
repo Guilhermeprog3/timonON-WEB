@@ -1,4 +1,3 @@
-// src/app/components/complaint-details/action.tsx
 "use server"
 
 import { api } from "@/app/service/server";
@@ -7,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { AxiosError } from "axios";
 
+// ... (interfaces ApiResponse e ApiUpdate - sem alterações)
 interface ApiUpdate {
   id: string;
   update_date: string;
@@ -36,6 +36,8 @@ interface ApiResponse {
   updates?: ApiUpdate[];
 }
 
+
+// ... (função normalizeStatus - sem alterações)
 function normalizeStatus(status: string): Status {
     if (!status) return "Pendente";
     const normalized = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
@@ -43,6 +45,7 @@ function normalizeStatus(status: string): Status {
     return normalized as Status;
 }
 
+// ... (função mapApiToComplaintDetails - sem alterações)
 function mapApiToComplaintDetails(data: ApiResponse): ComplaintDetailsData {
     if (!data) {
         throw new Error("Tentativa de mapear dados de reclamação indefinidos.");
@@ -55,7 +58,7 @@ function mapApiToComplaintDetails(data: ApiResponse): ComplaintDetailsData {
         status: normalizeStatus(data.status),
         category: data.category?.name ?? 'Não categorizado',
         creation_date: data.createdAt,
-        updatedAt: data.updatedAt, // <-- CORREÇÃO: Linha adicionada
+        updatedAt: data.updatedAt,
         address: data.address,
         latitude: data.latitude,
         longitude: data.longitude,
@@ -76,7 +79,6 @@ function mapApiToComplaintDetails(data: ApiResponse): ComplaintDetailsData {
     };
 }
 
-
 export async function getComplaintById(id: string): Promise<ComplaintDetailsData | null> {
     const token = (await cookies()).get("JWT")?.value;
     if (!token) return null;
@@ -87,11 +89,20 @@ export async function getComplaintById(id: string): Promise<ComplaintDetailsData
         });
         return mapApiToComplaintDetails(response.data);
     } catch (error) {
+        // **CORREÇÃO APLICADA AQUI**
+        // Verifica se o erro é do Axios e se o status é 404.
+        if (error instanceof AxiosError && error.response?.status === 404) {
+            // Se for 404 (Não Encontrado), apenas retorna nulo sem logar erro.
+            // Isso é esperado após a exclusão.
+            return null;
+        }
+        // Para qualquer outro erro, loga como uma falha real.
         console.error("Falha ao buscar detalhes da reclamação:", error);
         return null;
     }
 }
 
+// ... (Restante do arquivo: handleApiError, markAsInProgress, markAsResolved, deleteComplaint - sem alterações)
 function handleApiError(error: unknown): { message: string } {
     if (error instanceof AxiosError && error.response) {
         return { message: error.response.data?.message || "Ocorreu um erro desconhecido." };
@@ -123,4 +134,29 @@ export async function markAsResolved(id: string, comment: string) {
     } catch (error) {
         throw new Error(handleApiError(error).message);
     }
+}
+
+export async function deleteComplaint(id: string): Promise<{ success: boolean; message: string }> {
+  const token = (await cookies()).get("JWT")?.value;
+  if (!token) {
+    return { success: false, message: "Token não encontrado." };
+  }
+
+  try {
+    const response = await api.delete(`/destroy/post/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 204) {
+      revalidatePath("/complaint");
+      return { success: true, message: "Reclamação deletada com sucesso!" };
+    }
+
+    const errorData = await response.data;
+    return { success: false, message: errorData.message || "Erro ao deletar a reclamação." };
+
+  } catch (error: any) {
+    console.error("Falha ao deletar reclamação:", error);
+    return { success: false, message: error.response?.data?.message || "Ocorreu um erro de rede." };
+  }
 }

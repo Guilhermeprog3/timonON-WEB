@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation" 
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -27,8 +27,9 @@ import { format, isAfter, isBefore, isValid } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import type { Complaint } from "@/app/types/complaint"
-import { getComplaints, getCategories } from "./action"
+import { getComplaints, getCategories, deleteComplaint } from "./action" // Importa a nova action
 import { DateRange } from "react-day-picker"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
 const dateBetweenFilterFn: FilterFn<any> = (row, columnId, value) => {
     const date = new Date(row.getValue(columnId));
@@ -48,12 +49,21 @@ export function ComplaintsList() {
   const [loading, setLoading] = React.useState(true);
   
   const [searchInput, setSearchInput] = React.useState("");
-
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
 
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = React.useState('');
+
+  const handleDelete = async (id: string) => {
+    const result = await deleteComplaint(id);
+    if (result.success) {
+      setComplaints((prevComplaints) => prevComplaints.filter((c) => c.id !== id));
+      alert(result.message);
+    } else {
+      alert(result.message);
+    }
+  };
 
   const columns: ColumnDef<Complaint>[] = [
       { accessorKey: 'id', header: 'ID' },
@@ -81,19 +91,40 @@ export function ComplaintsList() {
       },
       {
         id: 'actions',
-        header: 'Ações',
+        header: () => <div className="text-right">Ações</div>,
         cell: ({ row }) => (
           <div className="flex items-center justify-end space-x-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push(`/complaints/${row.original.id}`)}
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/complaintDetails/${row.original.id}`);
+              }}
             >
               <Eye className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => console.log('Excluir:', row.original.id)}>
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. Isso excluirá permanentemente a reclamação.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(row.original.id)}>
+                    Deletar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         ),
       }
@@ -151,17 +182,16 @@ export function ComplaintsList() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-slate-50 p-4 rounded-lg border">
-        <div className="text-sm text-slate-600 mb-2">ÁREA DO USUÁRIO</div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Reclamações</h1>
-        <p className="text-slate-600">Gerencie todas as reclamações registradas pelos cidadãos.</p>
+      <div className="bg-white p-8 rounded-lg border shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Gerenciamento de Reclamações</h1>
+        <p className="text-sm text-slate-600">Filtre, visualize e gerencie todas as reclamações registradas no sistema.</p>
       </div>
 
-      <Card className="py-5">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filtros
+            Filtros de Busca
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -169,7 +199,7 @@ export function ComplaintsList() {
             <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
-                placeholder="Buscar por título ou ID..."
+                placeholder="Buscar por título ou ID da reclamação..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -187,7 +217,7 @@ export function ComplaintsList() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Em Andamento">Em Andamento</SelectItem>
                 <SelectItem value="Resolvido">Resolvido</SelectItem>
@@ -196,10 +226,10 @@ export function ComplaintsList() {
 
             <Select value={(table.getColumn("category")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("category")?.setFilterValue(value === "all" ? "" : value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Todas as categorias" />
+                <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem>
+                <SelectItem value="all">Todas as Categorias</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -222,7 +252,7 @@ export function ComplaintsList() {
                       format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
                     )
                   ) : (
-                    "Selecione um período"
+                    "Filtrar por data"
                   )}
                 </Button>
               </PopoverTrigger>
@@ -239,19 +269,19 @@ export function ComplaintsList() {
             </Popover>
           </div>
 
-          <div className="flex justify-start mt-4">
-            <Button onClick={handleSearch}>
-              <Search className="h-4 w-4 mr-2" />
-              Buscar
-            </Button>
+          <div className="flex justify-end mt-4 gap-2">
             <Button variant="outline" onClick={clearFilters} className="ml-2">
               Limpar Filtros
+            </Button>
+            <Button onClick={handleSearch}>
+              <Search className="h-4 w-4 mr-2" />
+              Aplicar Busca
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="py-3">
+      <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Lista de Reclamações</CardTitle>
@@ -263,12 +293,12 @@ export function ComplaintsList() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+            <div className="flex justify-center items-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-md border">
                 <Table>
                   <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
@@ -286,7 +316,7 @@ export function ComplaintsList() {
                       table.getRowModel().rows.map((row) => (
                         <TableRow 
                            key={row.id}
-                           className="cursor-pointer"
+                           className="cursor-pointer hover:bg-slate-50"
                            onClick={() => router.push(`/complaintDetails/${row.original.id}`)}
                         >
                           {row.getVisibleCells().map((cell) => (
@@ -298,7 +328,7 @@ export function ComplaintsList() {
                       ))
                     ) : (
                        <TableRow>
-                          <TableCell colSpan={columns.length} className="text-center py-8 text-slate-500">
+                          <TableCell colSpan={columns.length} className="text-center h-24 text-slate-500">
                              Nenhuma reclamação encontrada com os filtros aplicados.
                           </TableCell>
                        </TableRow>
@@ -307,9 +337,9 @@ export function ComplaintsList() {
                 </Table>
               </div>
 
-              <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="flex-1 text-sm text-muted-foreground">
-                  {table.getFilteredRowModel().rows.length} linha(s) encontrada(s).
+              <div className="flex items-center justify-between space-x-2 py-4">
+                <div className="text-sm text-muted-foreground">
+                  {table.getFilteredRowModel().rows.length} de {complaints.length} reclamações.
                 </div>
                 <div className="space-x-2">
                   <Button

@@ -12,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Pencil, Trash2, Plus, Check, Search, Filter, X } from 'lucide-react';
+import { Plus, Search, Filter, UserX } from 'lucide-react';
 import { Admin, Departament } from '@/app/types/user';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { deactivateUser } from './action';
 
 export function UserTable({
   data,
@@ -46,69 +47,15 @@ export function UserTable({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
 
-  const [editingId, setEditingId] = React.useState<number | null>(null);
-  const [editValues, setEditValues] = React.useState({
-    name: '',
-    email: '',
-    departmentId: null as number | null,
-    password: '',
-  });
-
   const getDepartamentoName = (id: number | null) =>
     departamentos.find((d) => d.id === id)?.name || 'N/A';
 
-  const handleDelete = async (id: number) => {
-    const token = document.cookie.split('; ').find(c => c.startsWith('JWT='))?.split('=')[1];
-    if (!token) return alert('Token não encontrado');
-    if (!confirm('Tem certeza que deseja deletar este administrador?')) return;
-
-    try {
-      const res = await fetch(`https://infra-timon-on.onrender.com/admin/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        alert('Administrador deletado!');
-        window.location.reload();
-      } else {
-        const err = await res.json();
-        alert(err.message || 'Erro ao deletar');
-      }
-    } catch (e) {
-      alert('Erro de rede ao deletar');
-    }
-  };
-
-  const handleSave = async (id: number) => {
-    const token = document.cookie.split('; ').find(c => c.startsWith('JWT='))?.split('=')[1];
-    if (!token) return alert('Token não encontrado');
-
-    const payload: { [key: string]: any } = {
-      name: editValues.name,
-      email: editValues.email,
-      role: 'ADMIN',
-      departmentId: editValues.departmentId,
-    };
-    if (editValues.password.trim()) {
-      payload.password = editValues.password.trim();
-    }
-
-    try {
-      const res = await fetch(`https://infra-timon-on.onrender.com/admin/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error((await res.json()).message || 'Erro ao atualizar');
-      }
-      alert('Administrador atualizado!');
+  const handleDeactivate = async (id: number) => {
+    if (!confirm('Tem certeza que deseja inativar este administrador?')) return;
+    const result = await deactivateUser(id);
+    alert(result.message);
+    if (result.success) {
       window.location.reload();
-    } catch (e) {
-      alert((e as Error).message);
-    } finally {
-      setEditingId(null);
     }
   };
 
@@ -116,70 +63,30 @@ export function UserTable({
     {
       accessorKey: 'name',
       header: 'Nome',
-      cell: ({ row }) =>
-        editingId === row.original.id ? (
-          <Input
-            value={editValues.name}
-            onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
-            className="w-full"
-          />
-        ) : (
-          <div className="font-medium">{row.getValue('name')}</div>
-        ),
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue('name')}</div>
+      ),
     },
     {
       accessorKey: 'email',
       header: 'Email',
-      cell: ({ row }) =>
-        editingId === row.original.id ? (
-          <Input
-            value={editValues.email}
-            onChange={(e) => setEditValues({ ...editValues, email: e.target.value })}
-            className="w-full"
-          />
-        ) : (
-          <div>{row.getValue('email')}</div>
-        ),
     },
     {
       accessorKey: 'departmentId',
       header: 'Departamento',
-      cell: ({ row }) =>
-        editingId === row.original.id ? (
-          <Select
-            value={String(editValues.departmentId ?? '')}
-            onValueChange={(value) => setEditValues({ ...editValues, departmentId: value ? Number(value) : null })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Nenhum</SelectItem>
-              {departamentos.map((d) => (
-                <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div>{getDepartamentoName(row.original.departmentId)}</div>
-        ),
+      cell: ({ row }) => (
+        <div>{getDepartamentoName(row.original.departmentId)}</div>
+      ),
       filterFn: (row, id, value) => String(row.getValue(id)) === String(value),
     },
-    {
-      id: 'password',
-      header: 'Senha',
-      cell: ({ row }) =>
-        editingId === row.original.id ? (
-          <Input
-            type="password"
-            placeholder="Nova senha (opcional)"
-            value={editValues.password}
-            onChange={(e) => setEditValues({ ...editValues, password: e.target.value })}
-            className="w-full"
-          />
-        ) : (
-          <span className="text-gray-400">••••••</span>
-        ),
+     {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={row.original.status.toUpperCase() === 'ATIVO' ? 'secondary' : 'destructive'}>
+          {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1).toLowerCase()}
+        </Badge>
+      ),
     },
     {
       accessorKey: 'role',
@@ -191,42 +98,21 @@ export function UserTable({
       header: () => <div className="text-right">Ações</div>,
       cell: ({ row }) => {
         if (row.original.role === 'SUPERADMIN') {
-            return null; // Não permite editar ou excluir SUPERADMIN
+            return null;
         }
-
-        const isEditing = editingId === row.original.id;
 
         return (
           <div className="flex items-center justify-end gap-1">
-            {isEditing ? (
-              <>
-                <Button variant="ghost" size="icon" onClick={() => handleSave(row.original.id)}>
-                  <Check size={16} className="text-green-600" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}>
-                  <X size={16} className="text-gray-600" />
-                </Button>
-              </>
-            ) : (
+            {row.original.status.toUpperCase() === 'ATIVO' && (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  setEditingId(row.original.id);
-                  setEditValues({
-                    name: row.original.name,
-                    email: row.original.email,
-                    departmentId: row.original.departmentId,
-                    password: '',
-                  });
-                }}
+                onClick={() => handleDeactivate(row.original.id)}
+                title="Inativar Usuário"
               >
-                <Pencil size={16} className="text-indigo-600" />
+                <UserX size={16} className="text-orange-600" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(row.original.id)}>
-              <Trash2 size={16} className="text-red-600" />
-            </Button>
           </div>
         );
       },
@@ -250,7 +136,7 @@ export function UserTable({
     <div className="space-y-6">
       <div className="bg-white p-8 rounded-lg border shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Gerenciamento de Usuários</h1>
-        <p className="text-sm text-slate-600">Adicione, edite ou remova usuários administradores do sistema.</p>
+        <p className="text-sm text-slate-600">Adicione ou remova usuários administradores do sistema.</p>
       </div>
 
       <Card>

@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ComplaintDetailsData, ComplaintUpdate } from "@/app/types/complaint"; // Importado ComplaintUpdate
+import { ComplaintDetailsData, ComplaintUpdate } from "@/app/types/complaint";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
-import { markAsInProgress, markAsResolved } from "./action";
+import { markAsInProgress, markAsResolved, deleteComplaint } from "./action";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const ComplaintMap = dynamic(() => import('./map'), { ssr: false });
 
@@ -86,6 +87,19 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
         }
     }
 
+    const handleDelete = async () => {
+        const result = await deleteComplaint(complaint.id);
+        
+        if (result.success) {
+            // **CORREÇÃO APLICADA AQUI**
+            // Redireciona PRIMEIRO para evitar que a página atual tente recarregar dados que não existem mais.
+            router.push('/complaint');
+        } else {
+            // Se a exclusão falhar, exibe a mensagem de erro.
+            alert(result.message);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="bg-white p-4 rounded-lg border">
@@ -103,10 +117,26 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Voltar
                         </Button>
-                        <Button variant="destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Excluir
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Essa ação não pode ser desfeita. Isso excluirá permanentemente a reclamação.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 </div>
             </div>
