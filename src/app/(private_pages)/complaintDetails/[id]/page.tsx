@@ -1,12 +1,10 @@
 import ComplaintDetailsServer from "@/app/components/complaint-details/server";
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default async function ComplaintDetailsPage({ params }: PageProps) {
+export default async function ComplaintDetailsPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   return (
     <div className="p-8">
       <ComplaintDetailsServer id={params.id} />
