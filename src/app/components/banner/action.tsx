@@ -39,13 +39,19 @@ export async function createBanner(
     });
     revalidatePath("/banners");
     return { success: true, message: "Banner criado com sucesso!" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Falha ao criar banner:", error);
+    if (error instanceof AxiosError && error.response) {
+      return {
+        success: false,
+        message:
+          error.response.data?.message || "Erro ao criar o banner.",
+      };
+    }
     return {
-      success: false,
-      message:
-        error.response?.data?.message || "Erro ao criar o banner.",
-    };
+        success: false,
+        message: "Ocorreu um erro desconhecido.",
+    }
   }
 }
 
@@ -61,12 +67,18 @@ export async function deleteBanner(
     });
     revalidatePath("/banners");
     return { success: true, message: "Banner deletado com sucesso!" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Falha ao deletar banner:", error);
+    if (error instanceof AxiosError && error.response) {
+      return {
+        success: false,
+        message:
+          error.response.data?.message || "Erro ao deletar o banner.",
+      };
+    }
     return {
-      success: false,
-      message:
-        error.response?.data?.message || "Erro ao deletar o banner.",
-    };
+        success: false,
+        message: "Ocorreu um erro desconhecido.",
+    }
   }
 }

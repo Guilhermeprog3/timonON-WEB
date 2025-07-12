@@ -6,6 +6,7 @@ import {
   ColumnDef,
   ColumnFiltersState,
   FilterFn,
+  Row,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -32,9 +33,9 @@ import { DateRange } from "react-day-picker"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import * as XLSX from 'xlsx';
 
-const dateBetweenFilterFn: FilterFn<any> = (row, columnId, value) => {
+const dateBetweenFilterFn: FilterFn<Complaint> = (row: Row<Complaint>, columnId: string, value: [Date | undefined, Date | undefined]) => {
     const date = new Date(row.getValue(columnId));
-    const [start, end] = value as (Date | undefined)[];
+    const [start, end] = value;
     if (!start && !end) return true;
     if (!isValid(date)) return false;
     if (start && !end) return isAfter(date, start);

@@ -16,7 +16,6 @@ const PasswordResetPage = () => {
   const [step, setStep] = useState<"email" | "verification" | "password" | "success">("email")
   const [email, setEmail] = useState("")
   const [tokenId, setTokenId] = useState("")
-  const [code, setCode] = useState("") 
 
   const getStepTitle = () => {
     switch (step) {
@@ -80,8 +79,7 @@ const PasswordResetPage = () => {
               email={email}
               tokenId={tokenId}
               onBack={goBack}
-              onSuccess={(verifiedCode) => {
-                setCode(verifiedCode)
+              onSuccess={() => {
                 setStep("password")
               }}
             />
