@@ -2,6 +2,9 @@
 
 import { api } from "@/app/service/server";
 import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getDepartaments } from "../departament/action";
 
 type Status = "Pendente" | "Em Andamento" | "Resolvido";
 
@@ -44,15 +47,38 @@ interface ApiPost {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
+  const session = await getServerSession(authOptions);
   const token = (await cookies()).get("JWT")?.value;
-  if (!token) return { total: 0, pendentes: 0, andamento: 0, resolvidas: 0, recentes: [], mostReported: [] };
+
+  if (!token || !session?.user) {
+    return { total: 0, pendentes: 0, andamento: 0, resolvidas: 0, recentes: [], mostReported: [] };
+  }
+  
+  const user = session.user;
+  let postsUrl = "/posts";
+  let mostReportedUrl = "/posts/complaints";
+
+  if (user.role === "ADMIN" && user.departmentId) {
+    const departments = await getDepartaments();
+    const department = departments.find(d => d.id === user.departmentId);
+    if(department) {
+        postsUrl = `/departments/posts-by-name?name=${department.name}`;
+        console.log(`Usuário ADMIN. Buscando dados do dashboard para o departamento: ${department.name}`);
+    } else {
+        console.error(`Departamento com ID ${user.departmentId} não encontrado.`);
+        return { total: 0, pendentes: 0, andamento: 0, resolvidas: 0, recentes: [], mostReported: [] };
+    }
+  } else if (user.role === 'SUPERADMIN') {
+    console.log("Usuário SUPERADMIN. Buscando todos os dados do dashboard.");
+  }
+
 
   try {
     const [postsResponse, mostReportedResponse] = await Promise.all([
-        api.get<ApiPost[]>("/posts", {
+        api.get<ApiPost[]>(postsUrl, {
             headers: { Authorization: `Bearer ${token}` },
         }),
-        api.get<ApiPost[]>("/posts/complaints", {
+        api.get<ApiPost[]>(mostReportedUrl, {
             headers: { Authorization: `Bearer ${token}` },
         })
     ]);

@@ -1,10 +1,13 @@
 "use server"
 
-import { api } from "@/app/service/server"
-import type { Complaint } from "@/app/types/complaint"
-import { cookies } from "next/headers"
-import { getServerSession } from "next-auth"
-import { revalidatePath } from "next/cache"
+import { api } from "@/app/service/server";
+import type { Complaint } from "@/app/types/complaint";
+import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getDepartaments } from "../departament/action";
+import { AxiosError } from "axios";
 
 interface ApiPost {
   id: string;
@@ -13,7 +16,6 @@ interface ApiPost {
   status: "Pendente" | "Em Andamento" | "Resolvido";
   category: { id: string; name: string };
 }
-
 
 function mapApiToComplaint(post: ApiPost): Complaint {
   return {
@@ -26,7 +28,7 @@ function mapApiToComplaint(post: ApiPost): Complaint {
 }
 
 export async function getComplaints(): Promise<Complaint[]> {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   const token = (await cookies()).get("JWT")?.value;
 
   const user = session?.user;
@@ -36,18 +38,26 @@ export async function getComplaints(): Promise<Complaint[]> {
     return [];
   }
 
-  let url = "/posts"; 
+  let url = "/posts";
 
   if (user.role === "ADMIN" && user.departmentId) {
-    url = `/posts/department/${user.departmentId}`;
-    console.log(`Usuário ADMIN. Buscando reclamações para o departamento: ${user.departmentId}`);
+    const departments = await getDepartaments();
+    const department = departments.find(d => d.id === user.departmentId);
+
+    if (department) {
+      url = `/departments/posts-by-name?name=${department.name}`;
+      console.log(`Usuário ADMIN. Buscando reclamações para o departamento: ${department.name} usando a URL: ${url}`);
+    } else {
+      console.error(`Departamento com ID ${user.departmentId} não encontrado.`);
+      return [];
+    }
   } else if (user.role === 'SUPERADMIN') {
     console.log("Usuário SUPERADMIN. Buscando todas as reclamações.");
   }
 
   try {
     const response = await api.get(url, {
-      headers: { 
+      headers: {
         Authorization: `Bearer ${token}`,
         'Cache-Control': 'no-cache',
       },
@@ -63,11 +73,19 @@ export async function getComplaints(): Promise<Complaint[]> {
     console.warn("getComplaints: A resposta da API não foi um array.", response.data);
     return [];
   } catch (error) {
-    console.error("Falha ao buscar reclamações:", error);
+    if (error instanceof AxiosError) {
+        console.error("Axios error details em getComplaints:", {
+            message: error.message,
+            url: error.config?.url,
+            status: error.response?.status,
+            data: error.response?.data
+        });
+    } else {
+        console.error("Falha ao buscar reclamações:", error);
+    }
     return [];
   }
 }
-
 
 export async function getCategories(): Promise<string[]> {
     const token = (await cookies()).get("JWT")?.value;
@@ -78,7 +96,7 @@ export async function getCategories(): Promise<string[]> {
 
     try {
         const response = await api.get("/categories", {
-            headers: { 
+            headers: {
               Authorization: `Bearer ${token}`,
               'Cache-Control': 'no-cache',
             },
