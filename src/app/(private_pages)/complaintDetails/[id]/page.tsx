@@ -1,8 +1,13 @@
+import { Metadata } from "next";
+import { Params } from "next/dist/shared/lib/router/utils/route-matcher"; // nem sempre necessário
+
 import ComplaintDetailsServer from "@/app/components/complaint-details/server";
 
-interface PageProps {
-  params: { id: string };
-}
+type PageProps = {
+  params: {
+    id: string;
+  };
+};
 
 export default async function ComplaintDetailsPage({ params }: PageProps) {
   return (
