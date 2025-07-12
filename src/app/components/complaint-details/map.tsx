@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Map, divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -13,7 +13,7 @@ interface ComplaintMapProps {
 }
 
 const ComplaintMap: React.FC<ComplaintMapProps> = ({ lat, lng }) => {
-    const position: [number, number] = [lat, lng];
+    const position = useMemo((): [number, number] => [lat, lng], [lat, lng]);
     const ZOOM_LEVEL = 16;
     const mapRef = useRef<Map | null>(null);
 
@@ -21,7 +21,7 @@ const ComplaintMap: React.FC<ComplaintMapProps> = ({ lat, lng }) => {
         if (mapRef.current) {
             mapRef.current.setView(position, ZOOM_LEVEL);
         }
-    }, [lat, lng, position]);
+    }, [position]);
 
     const customIcon = divIcon({
         html: ReactDOMServer.renderToString(
@@ -34,10 +34,10 @@ const ComplaintMap: React.FC<ComplaintMapProps> = ({ lat, lng }) => {
 
     return (
         <div className="w-full h-[300px] border rounded-lg overflow-hidden">
-            <MapContainer 
-                center={position} 
-                zoom={ZOOM_LEVEL} 
-                scrollWheelZoom={true} 
+            <MapContainer
+                center={position}
+                zoom={ZOOM_LEVEL}
+                scrollWheelZoom={true}
                 className="h-full w-full"
                 ref={mapRef}
             >
