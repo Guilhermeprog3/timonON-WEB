@@ -49,7 +49,6 @@ export default function LoginPage() {
       if (res?.error) {
         setErrorMsg("Credenciais inválidas. Verifique seu e-mail e senha.")
       } else if (res?.ok) {
-        // Redirecionado para /dashboard em vez de /home
         router.push("/dashboard")
       } else {
         setErrorMsg("Ocorreu um erro inesperado. Tente novamente mais tarde.")
@@ -63,9 +62,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-lg border-2 border-yellow-400 shadow-lg rounded-xl overflow-hidden">
-        <CardHeader className="space-y-2 text-center rounded-t-lg border-b-4 border-yellow-500 bg-[#291F75] text-white p-6">
-          <div className="flex justify-center mb-3 h-24 relative">
+      <Card className="w-full max-w-lg shadow-2xl rounded-xl overflow-hidden border-2 border-secondary">
+        <CardHeader className="space-y-2 text-center bg-primary text-primary-foreground p-8">
+          <div className="flex justify-center mb-4 h-24 relative">
             <Image
               src="/assets/prefeitura-logo.png"
               alt="Logo da Prefeitura"
@@ -76,7 +75,7 @@ export default function LoginPage() {
             />
           </div>
           <CardTitle className="text-3xl font-bold">Bem-vindo</CardTitle>
-          <CardDescription className="text-yellow-300 text-base">
+          <CardDescription className="text-secondary text-base">
             Acesse o painel de administração
           </CardDescription>
         </CardHeader>
@@ -148,7 +147,7 @@ export default function LoginPage() {
         </CardContent>
 
         <CardFooter className="flex flex-col items-center bg-gray-50 py-4 border-t">
-          <Link href="/reset" className="text-sm text-[#291F75] hover:underline font-medium">
+          <Link href="/reset" className="text-sm text-primary hover:underline font-medium">
             Esqueceu sua senha?
           </Link>
         </CardFooter>

@@ -14,7 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Search, Filter, Calendar as CalendarIcon, Download, Trash2, Eye } from "lucide-react" 
+import { Search, Filter, Calendar as CalendarIcon, Download, Trash2, Eye, X } from "lucide-react" 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -65,6 +65,19 @@ export function ComplaintsList() {
       alert(result.message);
     }
   };
+  
+  const getStatusVariant = (status: string): 'destructive' | 'warning' | 'success' | 'outline' => {
+    switch (status) {
+      case "Pendente":
+        return "destructive";
+      case "Em Andamento":
+        return "warning";
+      case "Resolvido":
+        return "success";
+      default:
+        return "outline";
+    }
+  };
 
   const columns: ColumnDef<Complaint>[] = [
       { accessorKey: 'id', header: 'ID' },
@@ -75,13 +88,7 @@ export function ComplaintsList() {
         header: 'Status',
         cell: ({ row }) => {
           const status = row.getValue("status") as string;
-          const getVariant = (s: string) => {
-              if (s === 'Pendente') return 'destructive';
-              if (s === 'Em Andamento') return 'default';
-              if (s === 'Resolvido') return 'secondary';
-              return 'outline';
-          };
-          return <Badge variant={getVariant(status)}>{status}</Badge>
+          return <Badge variant={getStatusVariant(status)}>{status}</Badge>
         }
       },
       {
@@ -103,12 +110,12 @@ export function ComplaintsList() {
                 router.push(`/complaintDetails/${row.original.id}`);
               }}
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-4 w-4 text-primary" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                  <Trash2 className="h-4 w-4 text-red-500" />
+                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent onClick={(e) => e.stopPropagation()}>
@@ -194,14 +201,14 @@ export function ComplaintsList() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-8 rounded-lg border shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Gerenciamento de Reclamações</h1>
-        <p className="text-sm text-slate-600">Filtre, visualize e gerencie todas as reclamações registradas no sistema.</p>
+       <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-1">Gerenciamento de Reclamações</h1>
+        <p className="text-sm text-primary-foreground/80">Filtre, visualize e gerencie todas as reclamações registradas no sistema.</p>
       </div>
 
       <Card className="pb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-primary">
             <Filter className="h-5 w-5" />
             Filtros de Busca
           </CardTitle>
@@ -224,14 +231,14 @@ export function ComplaintsList() {
                   className="pl-10"
                 />
               </div>
-               <Button onClick={handleSearch} className="w-full md:w-auto">
+               <Button onClick={handleSearch} variant="secondary" className="w-full md:w-auto">
                   <Search className="h-4 w-4 mr-2" />
                   Aplicar Busca
                 </Button>
             </div>
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Select value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger>
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -243,7 +250,7 @@ export function ComplaintsList() {
                 </Select>
 
                 <Select value={(table.getColumn("category")?.getFilterValue() as string) ?? "all"} onValueChange={(value) => table.getColumn("category")?.setFilterValue(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger>
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent>
@@ -260,7 +267,7 @@ export function ComplaintsList() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("text-left font-normal w-full md:w-auto", !dateRange?.from && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal", !dateRange?.from && "text-muted-foreground")}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateRange?.from ? (
@@ -285,7 +292,8 @@ export function ComplaintsList() {
                     />
                   </PopoverContent>
                 </Popover>
-                 <Button variant="outline" onClick={clearFilters} className="w-full md:w-auto">
+                 <Button variant="outline" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-2" />
                     Limpar Filtros
                  </Button>
             </div>
@@ -296,17 +304,17 @@ export function ComplaintsList() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Lista de Reclamações</CardTitle>
+            <CardTitle className="text-primary">Lista de Reclamações</CardTitle>
             <Button onClick={exportComplaints} variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
-              Exportar
+              Exportar para Excel
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : (
             <>
@@ -328,7 +336,7 @@ export function ComplaintsList() {
                       table.getRowModel().rows.map((row) => (
                         <TableRow 
                            key={row.id}
-                           className="cursor-pointer hover:bg-slate-50"
+                           className="cursor-pointer hover:bg-accent"
                            onClick={() => router.push(`/complaintDetails/${row.original.id}`)}
                         >
                           {row.getVisibleCells().map((cell) => (
@@ -340,7 +348,7 @@ export function ComplaintsList() {
                       ))
                     ) : (
                        <TableRow>
-                          <TableCell colSpan={columns.length} className="text-center h-24 text-slate-500">
+                          <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
                              Nenhuma reclamação encontrada com os filtros aplicados.
                           </TableCell>
                        </TableRow>

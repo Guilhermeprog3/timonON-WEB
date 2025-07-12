@@ -45,9 +45,9 @@ const PasswordResetPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white p-8">
-      <Card className="w-full max-w-lg border border-yellow-500">
-        <CardHeader className="space-y-1 text-center rounded-t-lg border-b-4 border-yellow-500 bg-[#291F75] text-white p-6 pt-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-lg shadow-2xl rounded-xl overflow-hidden border-2 border-secondary">
+        <CardHeader className="space-y-1 text-center bg-primary text-primary-foreground p-6 pt-6">
           <div className="flex justify-center mb-4 h-32 relative">
             <Image 
               src="/assets/prefeitura-logo.png" 
@@ -59,7 +59,7 @@ const PasswordResetPage = () => {
             />
           </div>
           <CardTitle className="text-3xl">{getStepTitle()}</CardTitle>
-          <CardDescription className="text-yellow-400 text-lg">{getStepDescription()}</CardDescription>
+          <CardDescription className="text-secondary text-lg">{getStepDescription()}</CardDescription>
         </CardHeader>
         
         <CardContent className="pt-8 pb-6 bg-white px-8">
@@ -98,11 +98,11 @@ const PasswordResetPage = () => {
           {step === "success" && <SuccessStep />}
         </CardContent>
         
-        <CardFooter className="flex justify-center bg-white pb-6">
+        <CardFooter className="flex justify-center bg-gray-50 py-4 border-t">
           {step !== "success" && (
             <Button 
               variant="link" 
-              className="px-0 text-md text-[#291F75]"
+              className="px-0 text-md text-primary"
               asChild
             >
               <Link href="/">Voltar para o login</Link>

@@ -50,10 +50,9 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
             });
         }
         
-        return allEvents;
+        return allEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }, [complaint]);
 
-    // Função de cores atualizada
     const getStatusVariant = (status: string): VariantProps<typeof badgeVariants>["variant"] => {
         if (status === 'Pendente') return 'destructive';
         if (status === 'Em Andamento') return 'warning';
@@ -98,11 +97,10 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white p-4 rounded-lg border">
-                <p className="text-sm text-slate-600 mb-2">ÁREA DO USUÁRIO / RECLAMAÇÕES / DETALHES</p>
+            <div className="bg-white p-4 rounded-lg border-l-4 border-primary shadow-sm">
                 <div className="flex justify-between items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">{complaint.title}</h1>
+                        <h1 className="text-2xl font-bold text-primary">{complaint.title}</h1>
                         <div className="flex items-center gap-2 mt-2">
                             <Badge variant={getStatusVariant(complaint.status)}>{complaint.status}</Badge>
                             <Badge variant="outline">{complaint.category}</Badge>
@@ -166,7 +164,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                             </div>
                             <div>
                                 <h3 className="text-sm font-semibold mb-1">Foto</h3>
-                                <div className="mt-2 flex justify-center items-center border rounded-lg p-4 h-64">
+                                <div className="mt-2 flex justify-center items-center border rounded-lg p-4 h-64 bg-gray-50">
                                   {complaint.photo_url ? (
                                       <img 
                                         src={complaint.photo_url} 
@@ -189,16 +187,16 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                              {complaint.latitude && complaint.longitude ? (
                                 <ComplaintMap lat={complaint.latitude} lng={complaint.longitude} />
                              ) : (
-                                <div className="text-muted-foreground text-center p-10 border rounded-lg">
+                                <div className="text-muted-foreground text-center p-10 border rounded-lg bg-gray-50">
                                     Localização não fornecida.
                                 </div>
                              )}
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-secondary border-2">
                         <CardHeader>
-                            <CardTitle>Atualizar Status</CardTitle>
+                            <CardTitle className="text-secondary">Atualizar Status</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 p-6">
                            <div className="space-y-2">
@@ -239,7 +237,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                                   disabled={isResolved}
                                 />
                             </div>
-                            <Button onClick={handleUpdateSubmit} disabled={isSubmitting || isResolved}>
+                            <Button onClick={handleUpdateSubmit} disabled={isSubmitting || isResolved} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
                                 {isSubmitting ? "Atualizando..." : "Salvar Alterações"}
                             </Button>
                         </CardContent>
@@ -264,13 +262,14 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                         </CardHeader>
                         <CardContent className="space-y-4 p-6">
                             {displayUpdates.length > 0 ? displayUpdates.map((update, index) => (
-                               <div key={update.id} className={`text-sm ${index > 0 ? 'border-t pt-4 mt-4' : ''}`}>
+                               <div key={update.id} className={`relative pl-6 ${index < displayUpdates.length - 1 ? 'pb-6 border-l-2 border-gray-200' : 'pb-0'}`}>
+                                    <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-2 border-primary"></div>
                                     <div className="flex justify-between items-center mb-1">
                                        <span className="font-semibold">{update.userName}</span>
                                        <span className="text-xs text-muted-foreground">{new Date(update.timestamp).toLocaleString('pt-BR')}</span>
                                     </div>
                                     <Badge variant={getStatusVariant(update.status)} className="my-1">{update.status}</Badge>
-                                    <p className="text-muted-foreground bg-slate-50 p-2 rounded-md mt-2">{update.comment || "Nenhum comentário."}</p>
+                                    <p className="text-muted-foreground bg-gray-50 p-2 rounded-md mt-2 text-xs">{update.comment || "Nenhum comentário."}</p>
                                </div>
                             )) : (
                                 <p className="text-sm text-muted-foreground p-4 text-center">Nenhuma atualização registrada.</p>

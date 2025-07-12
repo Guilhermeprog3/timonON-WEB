@@ -89,24 +89,24 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-8 rounded-lg border shadow-sm flex justify-between items-center">
+      <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-md flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">
-            Gerenciamento de Banners
+          <h1 className="text-2xl font-bold">
+            Gerenciamento de Bandeiras
           </h1>
-          <p className="text-sm text-slate-600">
-            Adicione ou remova os banners do aplicativo móvel.
+          <p className="text-sm text-primary-foreground/80">
+            Adicione ou remova as Bandeiras do aplicativo móvel.
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Novo Banner
+            <Button variant="secondary">
+              <Plus className="mr-2 h-4 w-4" /> Nova Bandeira
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Novo Banner</DialogTitle>
+              <DialogTitle>Criar Nova Bandeira</DialogTitle>
               <DialogDescription>
                 Faça o upload da imagem e insira o link de destino.
               </DialogDescription>
@@ -122,7 +122,7 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
                   {form.formState.errors.linkTo && <p className="text-red-500 text-sm">{String(form.formState.errors.linkTo.message)}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="banner">Imagem do Banner</Label>
+                  <Label htmlFor="banner">Imagem da Bandeira</Label>
                    <div className="relative">
                      <ImageIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input id="banner" type="file" accept=".png,.jpg,.jpeg" {...form.register("banner")} className="pl-10"/>
@@ -132,7 +132,7 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
                 {error && <p className="text-red-500 text-sm">{error}</p>}
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" variant="secondary" disabled={isLoading}>
                   {isLoading ? "Criando..." : "Criar Banner"}
                 </Button>
               </DialogFooter>
@@ -141,15 +141,15 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {banners.length > 0 ? (
           banners.map((banner) => (
             <Card key={banner.id}>
               <CardHeader>
-                <CardTitle className="truncate text-base">{banner.linkTo}</CardTitle>
+                <CardTitle className="truncate text-base text-primary">{banner.linkTo}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="relative w-full rounded-md border bg-slate-100" style={{ paddingTop: '56.25%' }}>
+                <div className="relative w-full rounded-md border bg-slate-50" style={{ paddingTop: '56.25%' }}>
                   <Image
                     src={banner.imageUrl}
                     alt="Banner"
@@ -159,7 +159,7 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="pb-4">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" className="w-full">
@@ -172,7 +172,7 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
                       <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                       <AlertDialogDescription>
                         Esta ação não pode ser desfeita. Isso irá deletar
-                        permanentemente o banner.
+                        permanentemente a bandeira.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -189,8 +189,8 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
             </Card>
           ))
         ) : (
-          <div className="col-span-full text-center text-slate-500 py-10">
-            <p>Nenhum banner cadastrado.</p>
+          <div className="col-span-full text-center text-muted-foreground py-16">
+            <p>Nenhuma bandeira cadastrado.</p>
           </div>
         )}
       </div>

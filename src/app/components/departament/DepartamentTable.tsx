@@ -46,7 +46,6 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
   const [newDepartmentName, setNewDepartmentName] = React.useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
 
-  // Funções de manipulação de estado memorizadas com useCallback
   const handleEdit = React.useCallback((department: Departament) => {
     setEditingId(department.id)
     setEditingName(department.name)
@@ -97,7 +96,6 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
     }
   }
 
-  // Definição das colunas memorizada com as dependências corretas
   const columns = React.useMemo<ColumnDef<Departament>[]>(() => [
     {
       accessorKey: "name",
@@ -132,11 +130,11 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
               </>
             ) : (
               <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
-                <Pencil size={16} className="text-indigo-600" />
+                <Pencil size={16} className="text-primary" />
               </Button>
             )}
             <Button variant="ghost" size="icon" onClick={() => handleDelete(row.original.id)}>
-              <Trash2 size={16} className="text-red-600" />
+              <Trash2 size={16} className="text-destructive" />
             </Button>
           </div>
         )
@@ -158,14 +156,14 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
 
   return (
     <div className="space-y-6">
-       <div className="bg-white p-8 rounded-lg border shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Gerenciamento de Departamentos</h1>
-        <p className="text-sm text-slate-600">Adicione, edite ou remova os departamentos do sistema.</p>
+       <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-1">Gerenciamento de Departamentos</h1>
+        <p className="text-sm text-primary-foreground/80">Adicione, edite ou remova os departamentos do sistema.</p>
       </div>
       
       <Card>
-        <CardContent>
-          <div className="flex items-center justify-between gap-4 p-4">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between gap-4">
             <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
@@ -177,7 +175,7 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
             </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+                <Button variant="secondary" className="flex items-center gap-2">
                 <Plus size={16} />
                 Novo Departamento
                 </Button>
@@ -205,7 +203,7 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit">Salvar Departamento</Button>
+                    <Button type="submit" variant="secondary">Salvar Departamento</Button>
                 </DialogFooter>
                 </form>
             </DialogContent>

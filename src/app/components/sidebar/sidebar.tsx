@@ -8,7 +8,7 @@ import {
   LogOut,
   ChevronUp,
   Building,
-  Image as ImageIcon, 
+  Image as ImageIcon,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -31,6 +31,7 @@ import { signOut } from "next-auth/react";
 import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface AppSidebarProps {
   userName: string;
@@ -39,7 +40,7 @@ interface AppSidebarProps {
 
 const allItems = [
     {
-        title: 'Dashboard',
+        title: 'Geral',
         url: '/dashboard',
         icon: LayoutDashboard,
         roles: ['SUPERADMIN', 'ADMIN']
@@ -51,7 +52,7 @@ const allItems = [
         roles: ['SUPERADMIN', 'ADMIN']
     },
     {
-        title: 'Banners',
+        title: 'Bandeiras',
         url: '/banners',
         icon: ImageIcon,
         roles: ['SUPERADMIN', 'ADMIN']
@@ -86,20 +87,42 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarContent className="bg-indigo-900 text-white flex flex-col">
-        <SidebarGroup>
+      <SidebarContent className="flex flex-col flex-grow">
+        <div className="flex items-center gap-3 p-4 border-b border-sidebar-border">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 transition-opacity hover:opacity-90"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg p-1">
+                <Image
+              src="/assets/prefeitura-logo.png"
+              alt="Logo da Prefeitura"
+              width={100}
+              height={100}
+              className="object-contain"
+              priority
+            />
+              </div>
+              <span className="text-xl font-bold tracking-tight">
+                Zelus
+              </span>
+            </Link>
+        </div>
+        
+        <SidebarGroup className="flex-grow">
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="flex flex-col justify-center h-full">
               {menuItems.map((item) => {
                 const isActive = pathname.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      className={`flex items-center gap-3 rounded-md px-3 py-2 transition-all hover:bg-indigo-800 ${isActive ? 'bg-indigo-700 font-semibold' : ''}`}
+                      isActive={isActive}
+                      className="flex items-center gap-5 rounded-lg px-4 py-5 text-xl transition-all"
                     >
                       <Link href={item.url}>
-                        <item.icon size={20} />
+                        <item.icon size={28} />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -111,37 +134,27 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-indigo-950 border-t border-indigo-800 p-2">
+      <SidebarFooter className="border-t border-sidebar-border p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="w-full text-white hover:bg-indigo-800 rounded-lg">
-              <div className="flex items-center gap-3">
-                <User2 size={20} />
+            <SidebarMenuButton className="w-full text-base rounded-lg p-3">
+              <div className="flex items-center gap-4">
+                <User2 size={24} />
                 <span className="truncate font-medium">{userName}</span>
               </div>
-              <ChevronUp size={20} className="ml-auto" />
+              <ChevronUp size={22} className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
             side="top"
             align="start"
-            className="w-[var(--radix-dropdown-menu-trigger-width)] bg-slate-50 text-slate-800 rounded-md shadow-lg border border-slate-200"
+            className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-md shadow-lg border"
           >
-            <DropdownMenuItem asChild>
-              <Link
-                href="/settings"
-                className="flex items-center gap-3 p-2 cursor-pointer hover:bg-slate-200 rounded-sm"
-              >
-                <Settings size={16} />
-                <span>Configurações</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <a
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-3 p-2 text-red-500 cursor-pointer hover:bg-slate-200 rounded-sm"
+                className="flex items-center gap-3 p-2 text-destructive cursor-pointer hover:bg-accent rounded-sm"
               >
                 <LogOut size={16} />
                 <span>Sair</span>

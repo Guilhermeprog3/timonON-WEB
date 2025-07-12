@@ -6,30 +6,29 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export function Header() {
   return (
-    <header className="flex h-16 items-center gap-4 border-b bg-white px-6">
-      {/* Botão de toggle da sidebar posicionado ao lado da sidebar */}
-      <SidebarTrigger className="text-slate-700 hover:text-slate-900" />
+    <header className="flex h-16 items-center gap-4 border-b border-primary/20 bg-primary px-6 text-primary-foreground shadow-md">
+      <SidebarTrigger className="text-primary-foreground/80 hover:text-primary-foreground" />
 
       <div className="flex items-center gap-3">
         <Link
           href="/dashboard"
-          className="flex items-center gap-3 transition-opacity hover:opacity-80"
+          className="flex items-center gap-3 transition-opacity hover:opacity-90"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 p-1">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg p-1">
             <Image
               src="/assets/prefeitura-logo.png"
-              alt="Zelus Logo"
-              width={28}
-              height={28}
-              style={{ filter: 'brightness(0) invert(1)' }}
+              alt="Logo da Prefeitura"
+              width={100}
+              height={100}
+              className="object-contain"
+              priority
             />
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900">
+          <span className="text-xl font-bold tracking-tight">
             Zelus
           </span>
         </Link>
       </div>
-
 
       <div className="ml-auto">
       </div>

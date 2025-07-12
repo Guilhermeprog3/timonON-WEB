@@ -83,7 +83,7 @@ export function UserTable({
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => (
-        <Badge variant={row.original.status.toUpperCase() === 'ATIVO' ? 'secondary' : 'destructive'}>
+        <Badge variant={row.original.status.toUpperCase() === 'ATIVO' ? 'success' : 'destructive'}>
           {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1).toLowerCase()}
         </Badge>
       ),
@@ -134,18 +134,13 @@ export function UserTable({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-8 rounded-lg border shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Gerenciamento de Usuários</h1>
-        <p className="text-sm text-slate-600">Adicione ou remova usuários administradores do sistema.</p>
+      <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-1">Gerenciamento de Usuários</h1>
+        <p className="text-sm text-primary-foreground/80">Adicione ou remova usuários administradores do sistema.</p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" /> Filtros
-          </CardTitle>
-        </CardHeader>
-        <CardContent className='pb-4'>
+        <CardContent className='p-4'>
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="relative flex-grow w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
@@ -173,7 +168,7 @@ export function UserTable({
               </SelectContent>
             </Select>
             <Link href="/users/new" className="w-full md:w-auto flex-shrink-0">
-              <Button className="w-full flex items-center gap-2">
+              <Button variant="secondary" className="w-full flex items-center gap-2">
                 <Plus size={16} />
                 Novo Usuário
               </Button>
