@@ -1,6 +1,3 @@
-import { Metadata } from "next";
-import { Params } from "next/dist/shared/lib/router/utils/route-matcher"; // nem sempre necessário
-
 import ComplaintDetailsServer from "@/app/components/complaint-details/server";
 
 type PageProps = {
