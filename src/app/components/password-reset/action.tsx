@@ -19,12 +19,18 @@ export async function requestPasswordReset(email: string): Promise<ActionResult 
       };
     }
     return { success: false, message: "Não foi possível obter o token de recuperação." };
-  } catch (error: any) {
-    console.error("Erro ao solicitar recuperação de senha:", error.response?.data);
+  } catch (error: unknown) {
+    console.error("Erro ao solicitar recuperação de senha:", error);
+    if (error instanceof AxiosError && error.response) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Não foi possível enviar o código. Verifique o e-mail e tente novamente.",
+      };
+    }
     return {
-      success: false,
-      message: error.response?.data?.message || "Não foi possível enviar o código. Verifique o e-mail e tente novamente.",
-    };
+        success: false,
+        message: "Ocorreu um erro desconhecido.",
+    }
   }
 }
 
@@ -59,11 +65,17 @@ export async function resetPassword(tokenId: string, newPassword: string): Promi
       success: true,
       message: "Senha alterada com sucesso!",
     };
-  } catch (error: any) {
-    console.error("Erro ao redefinir a senha:", error.response?.data);
+  } catch (error: unknown) {
+    console.error("Erro ao redefinir a senha:", error);
+    if (error instanceof AxiosError && error.response) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Não foi possível alterar a senha.",
+      };
+    }
     return {
-      success: false,
-      message: error.response?.data?.message || "Não foi possível alterar a senha.",
-    };
+        success: false,
+        message: "Ocorreu um erro desconhecido.",
+    }
   }
 }

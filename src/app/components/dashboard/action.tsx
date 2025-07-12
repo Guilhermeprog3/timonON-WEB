@@ -56,7 +56,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   
   const user = session.user;
   let postsUrl = "/posts";
-  let mostReportedUrl = "/posts/complaints";
+  const mostReportedUrl = "/posts/complaints";
 
   if (user.role === "ADMIN" && user.departmentId) {
     const departments = await getDepartaments();

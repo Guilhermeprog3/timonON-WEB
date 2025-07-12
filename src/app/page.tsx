@@ -53,8 +53,12 @@ export default function LoginPage() {
       } else {
         setErrorMsg("Ocorreu um erro inesperado. Tente novamente mais tarde.")
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || "Ocorreu um erro de conexão. Verifique sua internet.")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message)
+      } else {
+        setErrorMsg("Ocorreu um erro de conexão. Verifique sua internet.")
+      }
     } finally {
       setIsLoading(false)
     }

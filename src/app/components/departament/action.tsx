@@ -4,6 +4,7 @@ import { api } from "@/app/service/server"
 import { Departament } from "@/app/types/user"
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
+import { AxiosError } from 'axios';
 
 export async function getDepartaments(): Promise<Departament[]> {
   const token = (await cookies()).get("JWT")?.value
@@ -25,16 +26,19 @@ export async function createDepartment(name: string): Promise<{ success: boolean
   if (!token) return { success: false, message: "Token não encontrado." }
 
   try {
-    const response = await api.post("/department",{ name },
+    await api.post("/department",{ name },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     )
     revalidatePath("/departments")
     return { success: true, message: "Departamento criado com sucesso!" }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Falha ao criar departamento:", error)
-    return { success: false, message: error.response?.data?.message || "Erro ao criar departamento." }
+    if (error instanceof AxiosError && error.response) {
+      return { success: false, message: error.response?.data?.message || "Erro ao criar departamento." }
+    }
+    return { success: false, message: "Ocorreu um erro desconhecido." }
   }
 }
 
@@ -43,7 +47,7 @@ export async function updateDepartment(id: number, name: string): Promise<{ succ
   if (!token) return { success: false, message: "Token não encontrado." }
 
   try {
-    const response = await api.patch(
+    await api.patch(
       `/department/${id}`,
       { name },
       {
@@ -52,9 +56,12 @@ export async function updateDepartment(id: number, name: string): Promise<{ succ
     )
     revalidatePath("/departments")
     return { success: true, message: "Departamento atualizado com sucesso!" }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Falha ao atualizar departamento:", error)
-    return { success: false, message: error.response?.data?.message || "Erro ao atualizar departamento." }
+    if (error instanceof AxiosError && error.response) {
+      return { success: false, message: error.response?.data?.message || "Erro ao atualizar departamento." }
+    }
+    return { success: false, message: "Ocorreu um erro desconhecido." }
   }
 }
 
@@ -68,8 +75,11 @@ export async function deleteDepartment(id: number): Promise<{ success: boolean; 
     })
     revalidatePath("/departments")
     return { success: true, message: "Departamento deletado com sucesso!" }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Falha ao deletar departamento:", error)
-    return { success: false, message: error.response?.data?.message || "Erro ao deletar departamento." }
+    if (error instanceof AxiosError && error.response) {
+      return { success: false, message: error.response?.data?.message || "Erro ao deletar departamento." }
+    }
+    return { success: false, message: "Ocorreu um erro desconhecido." }
   }
 }

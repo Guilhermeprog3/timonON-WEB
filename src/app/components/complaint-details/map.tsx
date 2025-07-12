@@ -21,7 +21,7 @@ const ComplaintMap: React.FC<ComplaintMapProps> = ({ lat, lng }) => {
         if (mapRef.current) {
             mapRef.current.setView(position, ZOOM_LEVEL);
         }
-    }, [lat, lng]);
+    }, [lat, lng, position]);
 
     const customIcon = divIcon({
         html: ReactDOMServer.renderToString(

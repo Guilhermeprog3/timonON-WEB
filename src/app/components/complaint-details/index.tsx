@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic';
 import { markAsInProgress, markAsResolved, deleteComplaint } from "./action";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { VariantProps } from "class-variance-authority";
+import Image from "next/image";
 
 const ComplaintMap = dynamic(() => import('./map'), { ssr: false });
 
@@ -166,9 +167,11 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                                 <h3 className="text-sm font-semibold mb-1">Foto</h3>
                                 <div className="mt-2 flex justify-center items-center border rounded-lg p-4 h-64 bg-gray-50">
                                   {complaint.photo_url ? (
-                                      <img 
+                                      <Image
                                         src={complaint.photo_url} 
                                         alt="Foto da reclamação" 
+                                        width={500}
+                                        height={500}
                                         className="rounded-lg max-h-full max-w-full object-contain" 
                                       />
                                   ) : (

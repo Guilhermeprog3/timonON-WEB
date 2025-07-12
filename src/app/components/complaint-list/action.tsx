@@ -133,8 +133,11 @@ export async function deleteComplaint(id: string): Promise<{ success: boolean; m
     const errorData = await response.data;
     return { success: false, message: errorData.message || "Erro ao deletar a reclamação." };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Falha ao deletar reclamação:", error);
-    return { success: false, message: error.response?.data?.message || "Ocorreu um erro de rede." };
+    if (error instanceof AxiosError && error.response) {
+      return { success: false, message: error.response?.data?.message || "Ocorreu um erro de rede." };
+    }
+    return { success: false, message: "Ocorreu um erro desconhecido." };
   }
 }
