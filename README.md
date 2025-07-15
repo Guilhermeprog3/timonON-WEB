@@ -112,7 +112,7 @@ cd seu-repositorio
 yarn install
 
 # 4. Crie um arquivo .env.local com as variáveis:
-NEXTAUTH_SECRET=suachavesecreta
+NEXTAUTH_SECRET= [gere uma chave secreta]
 NEXTAUTH_URL=http://localhost:3000
 
 # 5. Rode a aplicação
