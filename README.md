@@ -80,7 +80,7 @@ A autenticação dos administradores é feita via [NextAuth.js](https://next-aut
 
 ---
 
-## 👨‍💼 Funcionalidades para Administradores de Departamento
+## 💼 Funcionalidades para Administradores de Departamento
 
 ### 📊 Dashboard Setorial
 
