@@ -103,10 +103,10 @@ A autenticação dos administradores é feita via [NextAuth.js](https://next-aut
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/seu-usuario/seu-repositorio.git
+git clone https://github.com/Guilhermeprog3/timonON-WEB.git
 
 # 2. Acesse o diretório
-cd seu-repositorio
+cd timonON-WEB
 
 # 3. Instale as dependências
 yarn install
