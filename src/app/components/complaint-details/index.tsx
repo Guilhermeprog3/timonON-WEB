@@ -4,7 +4,7 @@ import * as React from "react";
 import { ArrowLeft, Trash2, MapPin, Building, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge, badgeVariants } from "@/components/ui/badge"; // Import badgeVariants
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ComplaintDetailsData, ComplaintUpdate } from "@/app/types/complaint";
@@ -74,11 +74,9 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
             } else if (updateStatus === 'Resolvido') {
                 await markAsResolved(complaint.id, updateComment);
             }
-            alert("Status atualizado com sucesso!");
             router.refresh();
         } catch (error) {
             console.error("Falha ao atualizar status:", error);
-            alert("Ocorreu um erro ao atualizar o status.");
         } finally {
             setIsSubmitting(false);
         }
@@ -90,7 +88,6 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
         if (result.success) {
             router.push('/complaint');
         } else {
-            alert(result.message);
         }
     };
     

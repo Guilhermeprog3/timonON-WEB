@@ -61,7 +61,6 @@ export function ComplaintsList() {
     const result = await deleteComplaint(id);
     if (result.success) {
       setComplaints((prevComplaints) => prevComplaints.filter((c) => c.id !== id));
-      alert(result.message);
     } else {
       alert(result.message);
     }

@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { AdminData } from "./types";
+import { api } from "@/app/service/server";
+import Cookies from "js-cookie";
+import { AxiosError } from "axios";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -35,13 +38,11 @@ export function EditProfileModal({
 
   const handleSave = async () => {
     try {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("JWT="))
-        ?.split("=")[1];
+      const token = Cookies.get("JWT");
 
       if (!token) {
         console.error("Token JWT não encontrado.");
+        alert("Sua sessão expirou. Por favor, faça login novamente.");
         return;
       }
 
@@ -49,32 +50,28 @@ export function EditProfileModal({
         name,
         email,
       };
-
       if (password) {
         payload.password = password;
       }
 
-      const res = await fetch(`https://infra-timon-on.onrender.com/admin/${admin.id}`, {
-        method: "PATCH",
+      await api.patch(`admin`, payload, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
       });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert("Erro ao atualizar: " + (error.message || 'Erro desconhecido'));
-        return;
-      }
 
       alert("Informações atualizadas com sucesso!");
       onClose();
       window.location.reload();
+
     } catch (error) {
       console.error("Erro na requisição:", error);
-      alert("Erro inesperado ao atualizar.");
+      if (error instanceof AxiosError && error.response) {
+        const errorMessage = error.response.data?.message || 'Erro desconhecido ao atualizar.';
+        alert("Erro ao atualizar: " + errorMessage);
+      } else {
+        alert("Erro inesperado ao atualizar.");
+      }
     }
   };
 
@@ -97,16 +94,6 @@ export function EditProfileModal({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-slate-600">Senha Atual</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha atual para alterar"
             />
           </div>
         </div>

@@ -6,7 +6,7 @@ export interface Admin {
   departmentId: number;
   createdAt: string;
   updatedAt: string;
-  status: 'ACTIVE' | 'INACTIVE';
+  status: 'Ativo' | 'Inativo';
 }
 
 export interface Departament {

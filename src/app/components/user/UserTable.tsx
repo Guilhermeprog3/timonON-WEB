@@ -12,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Plus, Search, UserX } from 'lucide-react';
+import { Plus, Search, UserX, UserCheck } from 'lucide-react';
 import { Admin, Departament } from '@/app/types/user';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { deactivateUser } from './action';
+import { deactivateUser, reactivateUser } from './action';
 
 export function UserTable({
   data,
@@ -53,6 +53,15 @@ export function UserTable({
   const handleDeactivate = async (id: number) => {
     if (!confirm('Tem certeza que deseja inativar este administrador?')) return;
     const result = await deactivateUser(id);
+    alert(result.message);
+    if (result.success) {
+      window.location.reload();
+    }
+  };
+
+  const handleReactivate = async (id: number) => {
+    if (!confirm('Tem certeza que deseja reativar este administrador?')) return;
+    const result = await reactivateUser(id);
     alert(result.message);
     if (result.success) {
       window.location.reload();
@@ -84,7 +93,7 @@ export function UserTable({
       header: 'Status',
       cell: ({ row }) => (
         <Badge variant={row.original.status.toUpperCase() === 'ATIVO' ? 'success' : 'destructive'}>
-          {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1).toLowerCase()}
+          {row.original.status}
         </Badge>
       ),
     },
@@ -103,7 +112,7 @@ export function UserTable({
 
         return (
           <div className="flex items-center justify-end gap-1">
-            {row.original.status.toUpperCase() === 'ATIVO' && (
+            {row.original.status.toUpperCase() === 'ATIVO' ? (
               <Button
                 variant="ghost"
                 size="icon"
@@ -111,6 +120,15 @@ export function UserTable({
                 title="Inativar Usuário"
               >
                 <UserX size={16} className="text-orange-600" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleReactivate(row.original.id)}
+                title="Reativar Usuário"
+              >
+                <UserCheck size={16} className="text-green-600" />
               </Button>
             )}
           </div>

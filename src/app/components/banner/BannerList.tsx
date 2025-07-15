@@ -67,7 +67,6 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
     const result = await createBanner(formData);
 
     if (result.success) {
-      alert(result.message);
       setIsAddDialogOpen(false);
       form.reset();
       window.location.reload();
@@ -80,10 +79,8 @@ export function BannerList({ initialBanners }: { initialBanners: Banner[] }) {
   const handleDeleteBanner = async (id: string) => {
     const result = await deleteBanner(id);
     if (result.success) {
-      alert(result.message);
       setBanners(banners.filter((b) => b.id !== id));
     } else {
-      alert(result.message);
     }
   };
 
