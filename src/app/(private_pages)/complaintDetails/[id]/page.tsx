@@ -1,15 +1,18 @@
-import ComplaintDetailsServer from "@/app/components/complaint-details/server";
+import { NextPage } from 'next';
+import ComplaintDetailsServer from '@/app/components/complaint-details/server';
 
-// Definindo o tipo para as props da página de forma mais completa
-type Props = {
-  params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
+// Definindo o tipo para os parâmetros da rota
+interface PageParams {
+  id: string;
+}
 
-export default async function ComplaintDetailsPage({ params }: Props) {
+// Usando o tipo NextPage para garantir a compatibilidade
+const ComplaintDetailsPage: NextPage<{ params: PageParams }> = async ({ params }) => {
   return (
     <div className="p-8">
       <ComplaintDetailsServer id={params.id} />
     </div>
   );
-}
+};
+
+export default ComplaintDetailsPage;
