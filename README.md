@@ -2,7 +2,7 @@
 
 Este repositório contém o front-end do sistema administrativo da Prefeitura de Timon, desenvolvido como parte de um projeto de extensão acadêmico. A plataforma permite o gerenciamento de reclamações dos cidadãos, visualização de métricas e administração de usuários.
 
-> ⚠️ **Importante:** Este projeto documenta apenas a parte **web (front-end)**. A API back-end foi desenvolvida separadamente e é consumida via requisições HTTP.
+> ⚠️ **Importante:** Este projeto documenta apenas a parte **web (front-end)**. A API back-end foi desenvolvida separadamente.
 
 ---
 
