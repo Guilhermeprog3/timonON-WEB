@@ -3,7 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { cookies } from "next/headers";
 import { Admin } from "@/app/types/user";
 
-// Coloque o objeto authOptions aqui e exporte-o
 export const authOptions: AuthOptions = {
   pages: {
     signIn: '/',

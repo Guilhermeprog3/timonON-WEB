@@ -66,7 +66,7 @@ export function UserTable({
   const handleToggleStatus = async (id: number) => {
     const result = await toggleUserStatus(id);
     if (result.success) {
-      router.refresh(); // Atualiza os dados da página
+      router.refresh();
     } else {
       alert(result.message);
     }

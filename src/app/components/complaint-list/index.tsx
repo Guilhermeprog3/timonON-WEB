@@ -44,18 +44,15 @@ const dateBetweenFilterFn: FilterFn<Complaint> = (row: Row<Complaint>, columnId:
     return true;
 };
 
-// ✅ Adicionada a tipagem para a nova propriedade
 interface ComplaintsListProps {
   initialComplaints: Complaint[];
 }
 
-// ✅ O componente agora recebe 'initialComplaints' como propriedade
 export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
   const router = useRouter();
-  // ✅ O estado inicial agora usa os dados recebidos da página
   const [complaints, setComplaints] = React.useState<Complaint[]>(initialComplaints)
   const [categories, setCategories] = React.useState<string[]>([])
-  const [loading, setLoading] = React.useState(false); // ✅ Alterado para 'false'
+  const [loading, setLoading] = React.useState(false);
   
   const [searchInput, setSearchInput] = React.useState("");
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
@@ -146,7 +143,6 @@ export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
   ];
 
   React.useEffect(() => {
-    // ✅ Removida a busca de 'complaints', agora só busca 'categories'
     async function loadCategories() {
       const categoriesData = await getCategories();
       setCategories(categoriesData);

@@ -27,7 +27,6 @@ export interface Sector {
     name: string;
 }
 
-// Interface para o que a API retorna
 export interface ApiComment {
     id: number;
     text: string;
@@ -35,11 +34,10 @@ export interface ApiComment {
         name: string;
         avatarUrl?: string;
     };
-    totallikes: string | number; // A API retorna como string
-    userLiked?: boolean; // Espera a propriedade do backend
+    totallikes: string | number;
+    userLiked?: boolean;
 }
 
-// Interface que o Frontend vai usar
 export interface Comment {
     id: number;
     text: string;
@@ -47,7 +45,7 @@ export interface Comment {
         name: string;
         avatarUrl?: string;
     };
-    totalLikes: number; // Frontend usará como número
+    totalLikes: number;
     userLiked: boolean;
 }
 

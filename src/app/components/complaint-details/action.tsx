@@ -46,14 +46,13 @@ function normalizeStatus(status: string): Status {
     return "Pendente";
 }
 
-// Função para mapear o comentário da API para o formato do frontend
 function mapApiToComment(apiComment: ApiComment): Comment {
     return {
         id: apiComment.id,
         text: apiComment.text,
         user: apiComment.user,
-        totalLikes: Number(apiComment.totallikes) || 0, // Converte para número
-        userLiked: apiComment.userLiked || false, // Garante que userLiked seja sempre um booleano
+        totalLikes: Number(apiComment.totallikes) || 0,
+        userLiked: apiComment.userLiked || false,
     };
 }
 
@@ -106,7 +105,6 @@ export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
             return [];
         }
 
-        // Mapeia os comentários para o formato correto
         return response.data.comments.map(mapApiToComment);
 
     } catch (error) {
