@@ -5,7 +5,7 @@ import type { Complaint } from "@/app/types/complaint";
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { getDepartaments } from "../departament/action";
 import { AxiosError } from "axios";
 
