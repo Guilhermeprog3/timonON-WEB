@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ComplaintDetailsData, ComplaintUpdate } from "@/app/types/complaint";
+import { ComplaintDetailsData, ComplaintUpdate, Comment } from "@/app/types/complaint";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
-import { markAsInProgress, markAsResolved, deleteComplaint, createComment } from "./action";
+import { markAsInProgress, markAsResolved, deleteComplaint, createComment, likeComment } from "./action";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { VariantProps } from "class-variance-authority";
 import Image from "next/image";
@@ -32,12 +32,13 @@ type ComplaintDetailsProps = {
 
 type Status = "Pendente" | "Em Andamento" | "Resolvido";
 
-export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
+export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetailsProps) {
     const router = useRouter();
-    
+    const [complaint, setComplaint] = React.useState(initialComplaint);
     const [updateStatus, setUpdateStatus] = React.useState<Status>(complaint.status);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isSubmittingComment, setIsSubmittingComment] = React.useState(false);
+    const [likingComment, setLikingComment] = React.useState<number | null>(null);
 
     const form = useForm<z.infer<typeof commentSchema>>({
       resolver: zodResolver(commentSchema),
@@ -112,11 +113,49 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
       const result = await createComment(complaint.id, values.text);
       if (result.success) {
         form.reset();
+        router.refresh();
       } else {
         alert(`Erro: ${result.message}`);
       }
       setIsSubmittingComment(false);
     };
+
+    const handleLike = async (commentId: number) => {
+        setLikingComment(commentId);
+      
+        const originalComments = complaint.comments;
+      
+        // Optimistic UI update
+        setComplaint(prevComplaint => ({
+          ...prevComplaint,
+          comments: prevComplaint.comments.map(c => {
+            if (c.id === commentId) {
+              const currentLikes = Number(c.totalLikes) || 0;
+              return { 
+                ...c, 
+                userLiked: !c.userLiked, 
+                totalLikes: c.userLiked ? currentLikes - 1 : currentLikes + 1 
+              };
+            }
+            return c;
+          })
+        }));
+        
+        const result = await likeComment(complaint.id, commentId);
+        
+        if (!result.success) {
+          // Revert UI on failure
+          setComplaint(prevComplaint => ({
+              ...prevComplaint,
+              comments: originalComments
+          }));
+          alert(result.message);
+        } else {
+          router.refresh(); // Re-fetch data to ensure consistency
+        }
+        
+        setLikingComment(null);
+      }
     
     const isResolved = complaint.status === 'Resolvido';
 
@@ -181,7 +220,7 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                                  <div>
                                     <h3 className="text-sm font-semibold mb-1 flex items-center gap-1"><Calendar className="h-4 w-4" /> Última Atualização</h3>
                                     <p className="text-sm text-muted-foreground">{new Date(complaint.updatedAt).toLocaleDateString('pt-BR')}</p>
-                                </div>
+                                 </div>
                                 <div>
                                     <h3 className="text-sm font-semibold mb-1 flex items-center gap-1"><MapPin className="h-4 w-4" /> Endereço</h3>
                                     <p className="text-sm text-muted-foreground">{complaint.address}</p>
@@ -266,22 +305,28 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                             <CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5" /> Comentários</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 p-6">
-                            {complaint.comments.length > 0 ? complaint.comments.map((comment) => (
+                            {complaint.comments && complaint.comments.length > 0 ? complaint.comments.map((comment) => (
                                <div key={comment.id} className="flex gap-3">
                                     {comment.user.avatarUrl ? (
-                                        <Image src={comment.user.avatarUrl} alt={comment.user.name} width={40} height={40} className="rounded-full" />
+                                        <Image src={comment.user.avatarUrl} alt={comment.user.name} width={40} height={40} className="rounded-full object-cover" />
                                     ) : (
                                         <UserCircle className="h-10 w-10 text-gray-400" />
                                     )}
                                     <div className="flex-1">
-                                        <div className="flex justify-between items-center mb-1">
-                                           <span className="font-semibold">{comment.user.name}</span>
-                                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                               <ThumbsUp className="h-4 w-4" />
-                                               {comment.totalLikes}
-                                           </div>
+                                        <span className="font-semibold text-sm">{comment.user.name}</span>
+                                        <p className="text-muted-foreground bg-gray-50 p-2 rounded-md mt-1 text-sm">{comment.text}</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm"
+                                                onClick={() => handleLike(comment.id)}
+                                                disabled={likingComment === comment.id}
+                                                className={`flex items-center gap-1 h-auto px-2 py-1 text-xs ${comment.userLiked ? 'text-primary' : 'text-muted-foreground'}`}
+                                            >
+                                               <ThumbsUp className={`h-4 w-4 ${comment.userLiked ? 'fill-current' : ''}`} />
+                                               <span>{comment.totalLikes}</span>
+                                            </Button>
                                         </div>
-                                        <p className="text-muted-foreground bg-gray-50 p-2 rounded-md mt-2 text-xs">{comment.text}</p>
                                    </div>
                                </div>
                             )) : (

@@ -1,14 +1,21 @@
-import ComplaintDetailsServer from "@/app/components/complaint-details/server";
+import { notFound } from "next/navigation";
+import { getComplaintById } from "@/app/components/complaint-details/action";
+import { ComplaintDetails } from "@/app/components/complaint-details/index";
 
-// Tipo simples e direto para as props da página
 type PageProps = {
   params: { id: string };
 };
 
 export default async function ComplaintDetailsPage({ params }: PageProps) {
+  const complaint = await getComplaintById(params.id);
+
+  if (!complaint) {
+    notFound();
+  }
+
   return (
     <div className="p-8">
-      <ComplaintDetailsServer id={params.id} />
+      <ComplaintDetails complaint={complaint} />
     </div>
   );
 }

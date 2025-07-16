@@ -42,7 +42,6 @@ export function EditProfileModal({
 
       if (!token) {
         console.error("Token JWT não encontrado.");
-        alert("Sua sessão expirou. Por favor, faça login novamente.");
         return;
       }
 
@@ -60,17 +59,13 @@ export function EditProfileModal({
         },
       });
 
-      alert("Informações atualizadas com sucesso!");
       onClose();
       window.location.reload();
 
     } catch (error) {
       console.error("Erro na requisição:", error);
       if (error instanceof AxiosError && error.response) {
-        const errorMessage = error.response.data?.message || 'Erro desconhecido ao atualizar.';
-        alert("Erro ao atualizar: " + errorMessage);
       } else {
-        alert("Erro inesperado ao atualizar.");
       }
     }
   };

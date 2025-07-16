@@ -46,13 +46,11 @@ export async function getComplaints(): Promise<Complaint[]> {
 
     if (department) {
       url = `/departments/posts-by-name?name=${department.name}`;
-      console.log(`Usuário ADMIN. Buscando reclamações para o departamento: ${department.name} usando a URL: ${url}`);
     } else {
       console.error(`Departamento com ID ${user.departmentId} não encontrado.`);
       return [];
     }
   } else if (user.role === 'SUPERADMIN') {
-    console.log("Usuário SUPERADMIN. Buscando todas as reclamações.");
   }
 
   try {
