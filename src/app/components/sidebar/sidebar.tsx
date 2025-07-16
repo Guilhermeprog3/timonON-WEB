@@ -135,32 +135,30 @@ export function AppSidebar({ userName, userRole }: AppSidebarProps) {
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="w-full text-base rounded-lg p-3">
-              <div className="flex items-center gap-4">
-                <User2 size={24} />
-                <span className="truncate font-medium">{userName}</span>
-              </div>
-              <ChevronUp size={22} className="ml-auto" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+  <DropdownMenuTrigger asChild>
+    <div className="flex items-center gap-4 w-full text-base rounded-lg p-3 cursor-pointer hover:bg-sidebar-accent">
+      <User2 size={24} />
+      <span className="truncate font-medium">{userName}</span>
+      <ChevronUp size={22} className="ml-auto" />
+    </div>
+  </DropdownMenuTrigger>
 
-          <DropdownMenuContent
-            side="top"
-            align="start"
-            className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-md shadow-lg border"
-          >
-            <DropdownMenuItem asChild>
-              <a
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-3 p-2 text-destructive cursor-pointer hover:bg-accent rounded-sm"
-              >
-                <LogOut size={16} />
-                <span>Sair</span>
-              </a>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+  <DropdownMenuContent
+    side="top"
+    align="start"
+    className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-md shadow-lg border"
+  >
+    <DropdownMenuItem asChild>
+      <a
+        onClick={() => signOut({ callbackUrl: '/' })}
+        className="flex items-center gap-3 p-2 text-destructive cursor-pointer hover:bg-accent rounded-sm"
+      >
+        <LogOut size={16} />
+        <span>Sair</span>
+      </a>
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );

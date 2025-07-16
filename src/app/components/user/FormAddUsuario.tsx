@@ -70,12 +70,10 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
       throw new Error(error.message || 'Erro ao criar usuário');
     }
 
-    alert('Usuário criado com sucesso!');
     form.reset();
 
   } catch (err) {
     console.error(err);
-    alert('Erro ao enviar. Veja o console.');
   } finally {
     setLoading(false);
   }
@@ -134,7 +132,6 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
                 </FormControl>
                 <SelectContent>
                   {departamentos.map((d) => (
-                    console.log('Departamento:', d),
                     <SelectItem key={d.id} value={String(d.id)}>
                       {d.name}
                     </SelectItem>
