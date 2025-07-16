@@ -27,6 +27,16 @@ export interface Sector {
     name: string;
 }
 
+export interface Comment {
+    id: number;
+    text: string;
+    user: {
+        name: string;
+        avatarUrl?: string;
+    };
+    totalLikes: number;
+}
+
 export interface ComplaintDetailsData {
     id: string;
     title: string;
@@ -43,4 +53,5 @@ export interface ComplaintDetailsData {
     citizen: Citizen;
     updates: ComplaintUpdate[];
     comment?: string | null;
+    comments: Comment[];
 }

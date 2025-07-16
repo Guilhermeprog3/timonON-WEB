@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react";
-import { ArrowLeft, Trash2, MapPin, Building, Calendar, User } from "lucide-react";
+import { ArrowLeft, Trash2, MapPin, Building, Calendar, User, MessageSquare, ThumbsUp, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, badgeVariants } from "@/components/ui/badge";
@@ -10,12 +10,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ComplaintDetailsData, ComplaintUpdate } from "@/app/types/complaint";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
-import { markAsInProgress, markAsResolved, deleteComplaint } from "./action";
+import { markAsInProgress, markAsResolved, deleteComplaint, createComment } from "./action";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { VariantProps } from "class-variance-authority";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
 
 const ComplaintMap = dynamic(() => import('./map'), { ssr: false });
+
+const commentSchema = z.object({
+  text: z.string().min(1, { message: "O comentário não pode estar vazio." }),
+});
 
 type ComplaintDetailsProps = {
     complaint: ComplaintDetailsData;
@@ -27,8 +36,15 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
     const router = useRouter();
     
     const [updateStatus, setUpdateStatus] = React.useState<Status>(complaint.status);
-    const [updateComment, setUpdateComment] = React.useState("");
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isSubmittingComment, setIsSubmittingComment] = React.useState(false);
+
+    const form = useForm<z.infer<typeof commentSchema>>({
+      resolver: zodResolver(commentSchema),
+      defaultValues: {
+        text: "",
+      },
+    });
 
     const displayUpdates = React.useMemo(() => {
         const allEvents: ComplaintUpdate[] = [];
@@ -70,9 +86,9 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
         setIsSubmitting(true);
         try {
             if (updateStatus === 'Em Andamento') {
-                await markAsInProgress(complaint.id, updateComment);
+                await markAsInProgress(complaint.id, "");
             } else if (updateStatus === 'Resolvido') {
-                await markAsResolved(complaint.id, updateComment);
+                await markAsResolved(complaint.id, "");
             }
             router.refresh();
         } catch (error) {
@@ -89,6 +105,17 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
             router.push('/complaint');
         } else {
         }
+    };
+    
+    const handleCommentSubmit = async (values: z.infer<typeof commentSchema>) => {
+      setIsSubmittingComment(true);
+      const result = await createComment(complaint.id, values.text);
+      if (result.success) {
+        form.reset();
+      } else {
+        alert(`Erro: ${result.message}`);
+      }
+      setIsSubmittingComment(false);
     };
     
     const isResolved = complaint.status === 'Resolvido';
@@ -228,18 +255,70 @@ export function ComplaintDetails({ complaint }: ComplaintDetailsProps) {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Comentário de Atualização</label>
-                                <Textarea 
-                                  placeholder="Adicione um comentário sobre a atualização..." 
-                                  value={updateComment}
-                                  onChange={(e) => setUpdateComment(e.target.value)}
-                                  disabled={isResolved}
-                                />
-                            </div>
                             <Button onClick={handleUpdateSubmit} disabled={isSubmitting || isResolved} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
                                 {isSubmitting ? "Atualizando..." : "Salvar Alterações"}
                             </Button>
+                        </CardContent>
+                    </Card>
+                    
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5" /> Comentários</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 p-6">
+                            {complaint.comments.length > 0 ? complaint.comments.map((comment) => (
+                               <div key={comment.id} className="flex gap-3">
+                                    {comment.user.avatarUrl ? (
+                                        <Image src={comment.user.avatarUrl} alt={comment.user.name} width={40} height={40} className="rounded-full" />
+                                    ) : (
+                                        <UserCircle className="h-10 w-10 text-gray-400" />
+                                    )}
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-center mb-1">
+                                           <span className="font-semibold">{comment.user.name}</span>
+                                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                               <ThumbsUp className="h-4 w-4" />
+                                               {comment.totalLikes}
+                                           </div>
+                                        </div>
+                                        <p className="text-muted-foreground bg-gray-50 p-2 rounded-md mt-2 text-xs">{comment.text}</p>
+                                   </div>
+                               </div>
+                            )) : (
+                                <p className="text-sm text-muted-foreground p-4 text-center">Nenhum comentário nesta publicação.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                     <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">Adicionar Comentário</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(handleCommentSubmit)} className="space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="text"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Seu comentário</FormLabel>
+                                                <FormControl>
+                                                    <Textarea
+                                                        placeholder="Escreva seu comentário aqui..."
+                                                        disabled={isSubmittingComment}
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <Button type="submit" disabled={isSubmittingComment}>
+                                        {isSubmittingComment ? 'Enviando...' : 'Enviar Comentário'}
+                                    </Button>
+                                </form>
+                            </Form>
                         </CardContent>
                     </Card>
                 </div>
