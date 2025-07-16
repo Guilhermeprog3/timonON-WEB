@@ -4,7 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "../components/sidebar/sidebar";
 import { Header } from "../components/header";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import PageLayout from "./Page_Layout";
 
 const PrivateLayout = async ({ children }: { children: ReactNode }) => {
