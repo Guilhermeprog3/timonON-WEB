@@ -5,7 +5,7 @@ import { AppSidebar } from "../components/sidebar/sidebar";
 import { Header } from "../components/header";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
-import PageLayout from "./Page_layout";
+import PageLayout from "./Page_Layout";
 
 const PrivateLayout = async ({ children }: { children: ReactNode }) => {
   const session = await getServerSession(authOptions);
