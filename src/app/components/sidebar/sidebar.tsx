@@ -9,6 +9,7 @@ import {
   ChevronUp,
   Building,
   Image as ImageIcon,
+  ClipboardList,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -55,6 +56,12 @@ const allItems = [
         url: '/banners',
         icon: ImageIcon,
         roles: ['SUPERADMIN', 'ADMIN']
+    },
+    {
+        title: 'Categorias',
+        url: '/categories',
+        icon: ClipboardList,
+        roles: ['SUPERADMIN']
     },
     {
         title: 'Users',
