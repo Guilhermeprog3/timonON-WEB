@@ -5,6 +5,8 @@ import type { ComplaintDetailsData, Status, Comment, ApiComment } from "@/app/ty
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { AxiosError } from "axios";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 interface ApiUpdate {
   id: string;
@@ -50,9 +52,9 @@ function mapApiToComment(apiComment: ApiComment): Comment {
     return {
         id: apiComment.id,
         text: apiComment.text,
-        user: apiComment.user,
-        totalLikes: Number(apiComment.totallikes) || 0,
-        userLiked: apiComment.userLiked || false,
+        user: apiComment.user || { id: -1, name: 'Usuário Desconhecido' },
+        totalLikes: Number(apiComment.totalLikes) || 0,
+        likedByUser: apiComment.likedByUser || false,
     };
 }
 
@@ -97,15 +99,24 @@ export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
     if (!token) return [];
 
     try {
-        const response = await api.get<{ comments: ApiComment[] }>(`/comments/${postId}`, {
+        const response = await api.get<{ comments: ApiComment[] } | ApiComment[]>(`/comments/${postId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
+
+        const commentsData = response.data;
+
+        if (!commentsData) {
+            return [];
+        }
         
-        if (!response.data.comments) {
+        const commentsArray = Array.isArray(commentsData) ? commentsData : commentsData.comments;
+
+        if (!Array.isArray(commentsArray)) {
+             console.error("A resposta da API de comentários não é um array válido:", commentsArray);
             return [];
         }
 
-        return response.data.comments.map(mapApiToComment);
+        return commentsArray.map(mapApiToComment);
 
     } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 404) {
@@ -200,23 +211,37 @@ export async function deleteComplaint(id: string): Promise<{ success: boolean; m
   }
 }
 
-export async function createComment(postId: string, text: string): Promise<{ success: boolean; message: string }> {
+export async function createComment(postId: string, text: string): Promise<{ success: boolean; message: string; comment?: Comment }> {
   const token = (await cookies()).get("JWT")?.value;
-  if (!token) {
-    return { success: false, message: "Token não encontrado." };
+  const session = await getServerSession(authOptions);
+
+  if (!token || !session?.user) {
+    return { success: false, message: "Usuário não autenticado." };
   }
 
-  if (!text.trim()) {
-      return { success: false, message: "O comentário não pode estar vazio." };
+  if (!text.trim() || text.trim().length < 3) {
+      return { success: false, message: "O comentário deve ter no mínimo 3 caracteres." };
   }
 
   try {
-    await api.post(`/comments/${postId}`, { text }, {
+    const response = await api.post<ApiComment>(`/comments/${postId}`, { text }, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    const newComment: Comment = {
+      id: response.data.id,
+      text: response.data.text,
+      totalLikes: 0,
+      likedByUser: false,
+      user: {
+        id: Number(session.user.id),
+        name: session.user.name ?? 'Usuário',
+        avatarUrl: session.user.image ?? undefined,
+      },
+    };
+
     revalidatePath(`/complaintDetails/${postId}`);
-    return { success: true, message: "Comentário adicionado com sucesso!" };
+    return { success: true, message: "Comentário adicionado com sucesso!", comment: newComment };
 
   } catch (error: unknown) {
     console.error("Falha ao criar comentário:", error);
@@ -232,7 +257,7 @@ export async function likeComment(postId: string, commentId: number): Promise<{ 
     if (!token) {
       return { success: false, message: "Token não encontrado." };
     }
-  
+
     try {
       await api.put(`/comments/like/${commentId}`, {}, {
         headers: { Authorization: `Bearer ${token}` },

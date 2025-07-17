@@ -30,13 +30,13 @@ export interface Sector {
 export interface ApiComment {
     id: number;
     text: string;
-    user: {
+    user?: {
         id: number;
         name: string;
         avatarUrl?: string;
     };
-    totallikes: string | number;
-    userLiked?: boolean;
+    totalLikes: string | number;
+    likedByUser?: boolean;
 }
 
 export interface Comment {
@@ -48,7 +48,7 @@ export interface Comment {
         avatarUrl?: string;
     };
     totalLikes: number;
-    userLiked: boolean;
+    likedByUser: boolean;
 }
 
 export interface ComplaintDetailsData {

@@ -24,7 +24,7 @@ import { useSession } from "next-auth/react";
 const ComplaintMap = dynamic(() => import('./map'), { ssr: false });
 
 const commentSchema = z.object({
-  text: z.string().min(1, { message: "O comentário não pode estar vazio." }),
+  text: z.string().min(3, { message: "O comentário deve ter no mínimo 3 caracteres." }),
 });
 
 type ComplaintDetailsProps = {
@@ -114,10 +114,12 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
     const handleCommentSubmit = async (values: z.infer<typeof commentSchema>) => {
       setIsSubmittingComment(true);
       const result = await createComment(complaint.id, values.text);
-      if (result.success) {
+      if (result.success && result.comment) {
+        setComplaint(prevComplaint => ({
+            ...prevComplaint,
+            comments: [...prevComplaint.comments, result.comment as Comment]
+        }));
         form.reset();
-        router.refresh();
-        window.location.reload();
       } else {
         alert(`Erro: ${result.message}`);
       }
@@ -136,8 +138,8 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
               const currentLikes = Number(c.totalLikes) || 0;
               return { 
                 ...c, 
-                userLiked: !c.userLiked, 
-                totalLikes: c.userLiked ? currentLikes - 1 : currentLikes + 1 
+                likedByUser: !c.likedByUser,
+                totalLikes: c.likedByUser ? currentLikes - 1 : currentLikes + 1 
               };
             }
             return c;
@@ -309,15 +311,22 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
                         <CardContent className="space-y-4 p-6">
                             {complaint.comments && complaint.comments.length > 0 ? complaint.comments.map((comment) => (
                                <div key={comment.id} className="flex gap-3">
-                                    {comment.user.avatarUrl ? (
-                                        <Image src={comment.user.avatarUrl} alt={comment.user.name} width={40} height={40} className="rounded-full object-cover" />
-                                    ) : (
-                                        <UserCircle className="h-10 w-10 text-gray-400" />
-                                    )}
+                                    <div className="relative h-10 w-10 flex-shrink-0 rounded-full overflow-hidden">
+                                        {comment.user?.avatarUrl ? (
+                                            <Image 
+                                                src={comment.user.avatarUrl} 
+                                                alt={comment.user.name || 'Avatar'}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        ) : (
+                                            <UserCircle className="h-10 w-10 text-gray-400" />
+                                        )}
+                                    </div>
                                     <div className="flex-1">
                                     <div className="flex justify-between items-center">
-                                        <span className="font-semibold text-sm">{comment.user.name}</span>
-                                            {session?.user?.id === String(comment.user.id) &&
+                                        <span className="font-semibold text-sm">{comment.user?.name || 'Usuário'}</span>
+                                            {session?.user?.id === String(comment.user?.id) &&
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
                                                         <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -356,9 +365,9 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
                                                 size="sm"
                                                 onClick={() => handleLike(comment.id)}
                                                 disabled={likingComment === comment.id}
-                                                className={`flex items-center gap-1 h-auto px-2 py-1 text-xs ${comment.userLiked ? 'text-primary' : 'text-muted-foreground'}`}
+                                                className={`flex items-center gap-1 h-auto px-2 py-1 text-xs ${comment.likedByUser ? 'text-primary' : 'text-muted-foreground'}`}
                                             >
-                                               <ThumbsUp className={`h-4 w-4 ${comment.userLiked ? 'fill-current' : ''}`} />
+                                               <ThumbsUp className={`h-4 w-4 ${comment.likedByUser ? 'fill-current' : ''}`} />
                                                <span>{comment.totalLikes}</span>
                                             </Button>
                                         </div>

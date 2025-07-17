@@ -90,7 +90,6 @@ export function PasswordResetModal({ open, onClose, email }: PasswordResetModalP
     setLoading(false);
 
     if (response.success) {
-      alert("Senha alterada com sucesso!");
       handleClose();
     } else {
       setError(response.message || "Erro ao salvar nova senha.");
