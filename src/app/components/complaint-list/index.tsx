@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation" 
+import { useRouter } from "next/navigation"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -15,7 +15,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Search, Filter, Calendar as CalendarIcon, Download, Trash2, Eye, X } from "lucide-react" 
+import { Search, Filter, Calendar as CalendarIcon, Download, Trash2, Eye, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -28,7 +28,7 @@ import { format, isAfter, isBefore, isValid } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import type { Complaint } from "@/app/types/complaint"
-import { getComplaints, getCategories, deleteComplaint } from "./action"
+import { getCategories, deleteComplaint } from "./action" // Removido getComplaints daqui
 import { DateRange } from "react-day-picker"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import * as XLSX from 'xlsx';
@@ -44,11 +44,15 @@ const dateBetweenFilterFn: FilterFn<Complaint> = (row: Row<Complaint>, columnId:
     return true;
 };
 
-export function ComplaintsList() {
+interface ComplaintsListProps {
+  initialComplaints: Complaint[];
+}
+
+export function ComplaintsList({ initialComplaints }: ComplaintsListProps) {
   const router = useRouter();
-  const [complaints, setComplaints] = React.useState<Complaint[]>([])
+  const [complaints, setComplaints] = React.useState<Complaint[]>(initialComplaints)
   const [categories, setCategories] = React.useState<string[]>([])
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   
   const [searchInput, setSearchInput] = React.useState("");
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
@@ -139,17 +143,11 @@ export function ComplaintsList() {
   ];
 
   React.useEffect(() => {
-    async function loadInitialData() {
-      setLoading(true);
-      const [complaintsData, categoriesData] = await Promise.all([
-        getComplaints(),
-        getCategories(),
-      ]);
-      setComplaints(complaintsData);
+    async function loadCategories() {
+      const categoriesData = await getCategories();
       setCategories(categoriesData);
-      setLoading(false);
     }
-    loadInitialData();
+    loadCategories();
   }, []);
 
   const table = useReactTable({

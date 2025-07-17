@@ -5,7 +5,7 @@ import type { Complaint } from "@/app/types/complaint";
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { getDepartaments } from "../departament/action";
 import { AxiosError } from "axios";
 
@@ -46,13 +46,11 @@ export async function getComplaints(): Promise<Complaint[]> {
 
     if (department) {
       url = `/departments/posts-by-name?name=${department.name}`;
-      console.log(`Usuário ADMIN. Buscando reclamações para o departamento: ${department.name} usando a URL: ${url}`);
     } else {
       console.error(`Departamento com ID ${user.departmentId} não encontrado.`);
       return [];
     }
   } else if (user.role === 'SUPERADMIN') {
-    console.log("Usuário SUPERADMIN. Buscando todas as reclamações.");
   }
 
   try {

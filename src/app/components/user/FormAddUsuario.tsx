@@ -134,7 +134,6 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="email"

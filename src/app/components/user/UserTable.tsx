@@ -12,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Plus, Search, UserX, UserCheck } from 'lucide-react';
+import { Plus, Search, UserX, UserCheck, RefreshCw } from 'lucide-react';
 import { Admin, Departament } from '@/app/types/user';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,10 +31,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { deactivateUser, reactivateUser } from './action';
+import { toggleUserStatus } from './action';
+import { useRouter } from 'next/navigation';
 
 export function UserTable({
   data,
@@ -42,6 +54,7 @@ export function UserTable({
   data: { users: Admin[]; departamentos: Departament[] };
 }) {
   const { users = [], departamentos = [] } = data || {};
+  const router = useRouter();
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -50,21 +63,12 @@ export function UserTable({
   const getDepartamentoName = (id: number | null) =>
     departamentos.find((d) => d.id === id)?.name || 'N/A';
 
-  const handleDeactivate = async (id: number) => {
-    if (!confirm('Tem certeza que deseja inativar este administrador?')) return;
-    const result = await deactivateUser(id);
-    alert(result.message);
+  const handleToggleStatus = async (id: number) => {
+    const result = await toggleUserStatus(id);
     if (result.success) {
-      window.location.reload();
-    }
-  };
-
-  const handleReactivate = async (id: number) => {
-    if (!confirm('Tem certeza que deseja reativar este administrador?')) return;
-    const result = await reactivateUser(id);
-    alert(result.message);
-    if (result.success) {
-      window.location.reload();
+      router.refresh();
+    } else {
+      alert(result.message);
     }
   };
 
@@ -106,31 +110,36 @@ export function UserTable({
       id: 'actions',
       header: () => <div className="text-right">Ações</div>,
       cell: ({ row }) => {
-        if (row.original.role === 'SUPERADMIN') {
+        const user = row.original;
+        const isAtivo = user.status.toUpperCase() === 'ATIVO';
+
+        if (user.role === 'SUPERADMIN') {
             return null;
         }
 
         return (
-          <div className="flex items-center justify-end gap-1">
-            {row.original.status.toUpperCase() === 'ATIVO' ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDeactivate(row.original.id)}
-                title="Inativar Usuário"
-              >
-                <UserX size={16} className="text-orange-600" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleReactivate(row.original.id)}
-                title="Reativar Usuário"
-              >
-                <UserCheck size={16} className="text-green-600" />
-              </Button>
-            )}
+            <div className="text-right">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" title={isAtivo ? "Inativar Usuário" : "Reativar Usuário"}>
+                  {isAtivo ? <UserX size={16} className="text-orange-600" /> : <UserCheck size={16} className="text-green-600" />}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar Alteração de Status</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Você tem certeza que deseja {isAtivo ? 'inativar' : 'reativar'} o administrador <strong>{user.name}</strong>?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleToggleStatus(user.id)}>
+                    Confirmar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         );
       },

@@ -3,6 +3,8 @@
 import { Admin, Departament } from "@/app/types/user";
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { api } from "@/app/service/server";
+import { AxiosError } from "axios";
 
 export async function getUsersWithDepartments(): Promise<{
   users: Admin[];
@@ -38,58 +40,31 @@ export async function getUsersWithDepartments(): Promise<{
   };
 }
 
-export async function deactivateUser(id: number): Promise<{ success: boolean; message: string }> {
+export async function toggleUserStatus(id: number): Promise<{ success: boolean; message: string }> {
   const token = (await cookies()).get("JWT")?.value;
   if (!token) {
     return { success: false, message: "Token não encontrado." };
   }
 
   try {
-    const response = await fetch(`https://infra-timon-on.onrender.com/admin/${id}`, {
-      method: 'PATCH',
+    const response = await api.patch(`/admin/${id}`, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (response.status === 204) {
+    if (response.status === 200) {
       revalidatePath("/users");
-      return { success: true, message: "Administrador inativado com sucesso!" };
+      return { success: true, message: response.data.message || "Status do usuário atualizado com sucesso!" };
     }
 
-    const errorData = await response.json();
-    return { success: false, message: errorData.message || "Erro ao inativar administrador." };
+    const errorData = response.data;
+    return { success: false, message: errorData.message || "Erro ao alterar o status do usuário." };
 
-  } catch (error) {
-    console.error("Falha ao inativar administrador:", error);
-    return { success: false, message: "Ocorreu um erro de rede." };
-  }
-}
-
-export async function reactivateUser(id: number): Promise<{ success: boolean; message: string }> {
-  const token = (await cookies()).get("JWT")?.value;
-  if (!token) {
-    return { success: false, message: "Token não encontrado." };
-  }
-
-  try {
-    const response = await fetch(`https://infra-timon-on.onrender.com/admin/activate/${id}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 204) {
-      revalidatePath("/users");
-      return { success: true, message: "Administrador reativado com sucesso!" };
+  } catch (error: unknown) {
+    if (error instanceof AxiosError && error.response) {
+        return { success: false, message: error.response.data?.message || "Ocorreu um erro de rede." };
     }
-
-    const errorData = await response.json();
-    return { success: false, message: errorData.message || "Erro ao reativar administrador." };
-
-  } catch (error) {
-    console.error("Falha ao reativar administrador:", error);
-    return { success: false, message: "Ocorreu um erro de rede." };
+    return { success: false, message: "Ocorreu um erro desconhecido." };
   }
 }

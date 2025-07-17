@@ -24,6 +24,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import {
   Table,
@@ -70,13 +81,11 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
   }, [editingName])
 
   const handleDelete = React.useCallback(async (id: number) => {
-    if (confirm("Tem certeza que deseja deletar este departamento?")) {
-      const result = await deleteDepartment(id)
-      if (result.success) {
-        setDepartments(prev => prev.filter((d) => d.id !== id))
-      } else {
-        alert(result.message)
-      }
+    const result = await deleteDepartment(id)
+    if (result.success) {
+      setDepartments(prev => prev.filter((d) => d.id !== id))
+    } else {
+      alert(result.message)
     }
   }, [])
 
@@ -133,9 +142,25 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
                 <Pencil size={16} className="text-primary" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(row.original.id)}>
-              <Trash2 size={16} className="text-destructive" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Trash2 size={16} className="text-destructive" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o departamento.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(row.original.id)}>Deletar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )
       },
@@ -160,7 +185,7 @@ export function DepartamentTable({ initialDepartments }: { initialDepartments: D
         <h1 className="text-2xl font-bold mb-1">Gerenciamento de Departamentos</h1>
         <p className="text-sm text-primary-foreground/80">Adicione, edite ou remova os departamentos do sistema.</p>
       </div>
-      
+
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between gap-4">

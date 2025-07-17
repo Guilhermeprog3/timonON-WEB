@@ -3,7 +3,7 @@
 import { api } from "@/app/service/server";
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { getDepartaments } from "../departament/action";
 
 type Status = "Pendente" | "Em Andamento" | "Resolvido";
@@ -63,13 +63,11 @@ export async function getDashboardData(): Promise<DashboardData> {
     const department = departments.find(d => d.id === user.departmentId);
     if(department) {
         postsUrl = `/departments/posts-by-name?name=${department.name}`;
-        console.log(`Usuário ADMIN. Buscando dados do dashboard para o departamento: ${department.name}`);
     } else {
         console.error(`Departamento com ID ${user.departmentId} não encontrado.`);
         return { total: 0, pendentes: 0, andamento: 0, resolvidas: 0, recentes: [], mostReported: [] };
     }
   } else if (user.role === 'SUPERADMIN') {
-    console.log("Usuário SUPERADMIN. Buscando todos os dados do dashboard.");
   }
 
 

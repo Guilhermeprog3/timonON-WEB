@@ -1,7 +1,7 @@
 "use server"
 
 import { api } from "@/app/service/server";
-import type { ComplaintDetailsData, Status, Comment } from "@/app/types/complaint";
+import type { ComplaintDetailsData, Status, Comment, ApiComment } from "@/app/types/complaint";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { AxiosError } from "axios";
@@ -46,6 +46,17 @@ function normalizeStatus(status: string): Status {
     return "Pendente";
 }
 
+function mapApiToComment(apiComment: ApiComment): Comment {
+    return {
+        id: apiComment.id,
+        text: apiComment.text,
+        user: apiComment.user,
+        totalLikes: Number(apiComment.totallikes) || 0,
+        userLiked: apiComment.userLiked || false,
+    };
+}
+
+
 function mapApiToComplaintDetails(data: ApiResponse, comments: Comment[]): ComplaintDetailsData {
     if (!data) {
         throw new Error("Tentativa de mapear dados de reclamação indefinidos.");
@@ -86,12 +97,20 @@ export async function getCommentsByPostId(postId: string): Promise<Comment[]> {
     if (!token) return [];
 
     try {
-        const response = await api.get<{ comments: Comment[] }>(`/comments/${postId}`, {
+        const response = await api.get<{ comments: ApiComment[] }>(`/comments/${postId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(response.data)
-        return response.data.comments;
+        
+        if (!response.data.comments) {
+            return [];
+        }
+
+        return response.data.comments.map(mapApiToComment);
+
     } catch (error) {
+        if (error instanceof AxiosError && error.response?.status === 404) {
+            return [];
+        }
         console.error("Falha ao buscar comentários:", error);
         return [];
     }
@@ -207,3 +226,24 @@ export async function createComment(postId: string, text: string): Promise<{ suc
     return { success: false, message: "Ocorreu um erro desconhecido." };
   }
 }
+
+export async function likeComment(postId: string, commentId: number): Promise<{ success: boolean; message: string }> {
+    const token = (await cookies()).get("JWT")?.value;
+    if (!token) {
+      return { success: false, message: "Token não encontrado." };
+    }
+  
+    try {
+      await api.put(`/comments/like/${commentId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      revalidatePath(`/complaintDetails/${postId}`);
+      return { success: true, message: "Ação de curtir realizada com sucesso!" };
+    } catch (error: unknown) {
+      console.error("Falha ao curtir comentário:", error);
+      if (error instanceof AxiosError && error.response) {
+        return { success: false, message: error.response?.data?.message || "Ocorreu um erro ao curtir o comentário." };
+      }
+      return { success: false, message: "Ocorreu um erro desconhecido." };
+    }
+  }

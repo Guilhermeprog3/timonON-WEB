@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"; // Ícones adicionados
+import { Eye, EyeOff } from "lucide-react";
 import {
   requestPasswordReset,
   validateResetCode,
@@ -25,7 +25,6 @@ export function PasswordResetModal({ open, onClose, email }: PasswordResetModalP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // Estados para controlar a visibilidade da senha
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
