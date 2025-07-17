@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Mail, User, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +11,6 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,36 +34,45 @@ import {
 import { Departament } from '@/app/types/user';
 
 const formSchema = z.object({
-  name: z.string().min(3, 'Mínimo 3 caracteres'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6).max(32),
-  role: z.enum(['ADMIN']),
-  departmentId: z.string().optional(),
+  name: z.string().min(3, { message: 'O nome deve ter no mínimo 3 caracteres.' }),
+  email: z.string().email({ message: 'Por favor, insira um email válido.' }),
+  password: z.string().min(6, { message: 'A senha deve ter no mínimo 6 caracteres.' }),
+  confirmPassword: z.string(),
+  departmentId: z.string({ required_error: 'Por favor, selecione um departamento.' }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não coincidem.",
+  path: ["confirmPassword"],
 });
+
 type FormValues = z.infer<typeof formSchema>;
 
 export function FormAddUsuario({ departamentos }: { departamentos: Departament[] }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       email: '',
       password: '',
-      role: 'ADMIN',
-      departmentId: '',
+      confirmPassword: '',
+      departmentId: undefined,
     },
   });
 
   async function onSubmit(values: FormValues) {
     setLoading(true);
+    setError('');
     try {
       const token = document.cookie
         .split('; ')
         .find((c) => c.startsWith('JWT='))
         ?.split('=')[1];
       if (!token) {
-        alert('Token de autenticação não encontrado');
+        setError('Token de autenticação não encontrado. Faça login novamente.');
+        setLoading(false);
         return;
       }
 
@@ -72,8 +80,8 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
         name: values.name,
         email: values.email,
         password: values.password,
-        role: values.role,
-        ...(values.departmentId && { departmentId: Number(values.departmentId) }),
+        role: 'ADMIN',
+        departmentId: Number(values.departmentId),
       };
 
       const res = await fetch('https://infra-timon-on.onrender.com/admin', {
@@ -86,41 +94,35 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message ?? 'Erro ao criar usuário');
+        const errorData = await res.json();
+        throw new Error(errorData.message ?? 'Erro ao criar usuário');
       }
 
-      alert('Usuário criado com sucesso!');
-      form.reset();
-    } catch (err) {
+      router.push('/users');
+
+    } catch (err: any) {
       console.error(err);
-      alert('Erro ao enviar. Veja o console.');
+      setError(err.message || 'Erro ao enviar. Tente novamente.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 space-y-6">
-        <Card className="bg-[#291F75] text-white rounded-lg">
-          <CardHeader className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">Criar Usuário</CardTitle>
-              <CardDescription className="text-purple-200">
-                Adicione um novo usuário ao sistema
-              </CardDescription>
-            </div>
-            <Link href="/private/users">
-              <ArrowLeft className="w-6 h-6 hover:text-purple-300 transition-colors" />
-            </Link>
-          </CardHeader>
-        </Card>
+    <div className="space-y-6">
+      <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-1">Criar Novo Usuário</h1>
+        <p className="text-sm text-primary-foreground/80">Adicione um novo administrador com acesso ao painel.</p>
+      </div>
 
-        <Card className="rounded-lg shadow">
-          <CardContent className="py-8 px-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <Card className='pb-6'>
+            <CardHeader>
+              <CardTitle>Informações do Usuário</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="name"
@@ -128,7 +130,10 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
                     <FormItem>
                       <FormLabel>Nome</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <div className="relative">
+                           <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                           <Input placeholder="Nome completo" {...field} className="pl-10" />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -141,13 +146,17 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" {...field} />
+                         <div className="relative">
+                           <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                           <Input type="email" placeholder="email@timon.ma.gov.br" {...field} className="pl-10" />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
+              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="password"
@@ -155,52 +164,71 @@ export function FormAddUsuario({ departamentos }: { departamentos: Departament[]
                     <FormItem>
                       <FormLabel>Senha</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} />
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input type="password" placeholder="Digite a senha" {...field} className="pl-10"/>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <FormField
+                 <FormField
                   control={form.control}
-                  name="departmentId"
+                  name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Departamento</FormLabel>
+                      <FormLabel>Confirmar Senha</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um departamento" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {departamentos.map((d) => (
-                              <SelectItem key={d.id} value={String(d.id)}>
-                                {d.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input type="password" placeholder="Confirme a senha" {...field} className="pl-10" />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </div>
+              <FormField
+                control={form.control}
+                name="departmentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Departamento</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um departamento" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {departamentos.map((d) => (
+                          <SelectItem key={d.id} value={String(d.id)}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
 
-        <div className="container mx-auto px-4 max-w-lg">
-          <Button
-            onClick={form.handleSubmit(onSubmit)}
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? 'Enviando...' : 'Criar Usuário'}
-          </Button>
-        </div>
-      </div>
+          {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+
+          <div className="flex justify-end gap-2">
+              <Button variant="outline" type="button" onClick={() => router.push('/users')}>
+                  Cancelar
+              </Button>
+              <Button type="submit" disabled={loading}>
+                  {loading ? 'Salvando...' : 'Salvar Usuário'}
+              </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

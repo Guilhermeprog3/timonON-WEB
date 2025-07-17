@@ -5,8 +5,6 @@ export default async function NewUserPage() {
   const { departamentos } = await getUsersWithDepartments();
 
   return (
-    <div className="p-6">
-      <FormAddUsuario departamentos={departamentos} />
-    </div>
+    <FormAddUsuario departamentos={departamentos} />
   );
 }

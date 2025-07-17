@@ -247,3 +247,30 @@ export async function likeComment(postId: string, commentId: number): Promise<{ 
       return { success: false, message: "Ocorreu um erro desconhecido." };
     }
   }
+
+export async function deleteUserComment(commentId: number): Promise<{ success: boolean; message: string }> {
+  const token = (await cookies()).get("JWT")?.value;
+  if (!token) {
+    return { success: false, message: "Token não encontrado." };
+  }
+
+  try {
+    const response = await api.delete(`/comments/${commentId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 204) {
+      return { success: true, message: "Comentário deletado com sucesso!" };
+    }
+
+    const errorData = response.data;
+    return { success: false, message: errorData.message || "Erro ao deletar o comentário." };
+
+  } catch (error: unknown) {
+    console.error("Falha ao deletar comentário:", error);
+    if (error instanceof AxiosError && error.response) {
+      return { success: false, message: error.response?.data?.message || "Ocorreu um erro de rede." };
+    }
+    return { success: false, message: "Ocorreu um erro desconhecido." };
+  }
+}

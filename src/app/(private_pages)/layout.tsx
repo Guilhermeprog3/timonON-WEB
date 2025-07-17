@@ -6,6 +6,7 @@ import { Header } from "../components/header";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import PageLayout from "./Page_Layout";
+import SessionProviderWrapper from "../components/SessionProviderWrapper";
 
 const PrivateLayout = async ({ children }: { children: ReactNode }) => {
   const session = await getServerSession(authOptions);
@@ -22,19 +23,21 @@ const PrivateLayout = async ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen min-w-full">
-        <AppSidebar userName={name ?? 'Usuário'} userRole={role} />
-        <div className="flex w-full flex-col">
-          <Header />
-          <main className="flex-1 bg-slate-50 p-6">
-            <PageLayout userRole={role}>
-              {children}
-            </PageLayout>
-          </main>
+    <SessionProviderWrapper>
+      <SidebarProvider>
+        <div className="flex min-h-screen min-w-full">
+          <AppSidebar userName={name ?? 'Usuário'} userRole={role} />
+          <div className="flex w-full flex-col">
+            <Header />
+            <main className="flex-1 bg-slate-50 p-6">
+              <PageLayout userRole={role}>
+                {children}
+              </PageLayout>
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </SessionProviderWrapper>
   );
 };
 

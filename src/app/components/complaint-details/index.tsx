@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ComplaintDetailsData, ComplaintUpdate, Comment } from "@/app/types/complaint";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
-import { markAsInProgress, markAsResolved, deleteComplaint, createComment, likeComment } from "./action";
+import { markAsInProgress, markAsResolved, deleteComplaint, createComment, likeComment, deleteUserComment } from "./action";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { VariantProps } from "class-variance-authority";
 import Image from "next/image";
@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useSession } from "next-auth/react";
 
 
 const ComplaintMap = dynamic(() => import('./map'), { ssr: false });
@@ -34,6 +35,7 @@ type Status = "Pendente" | "Em Andamento" | "Resolvido";
 
 export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetailsProps) {
     const router = useRouter();
+    const { data: session } = useSession();
     const [complaint, setComplaint] = React.useState(initialComplaint);
     const [updateStatus, setUpdateStatus] = React.useState<Status>(complaint.status);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -92,6 +94,7 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
                 await markAsResolved(complaint.id, "");
             }
             router.refresh();
+            window.location.reload();
         } catch (error) {
             console.error("Falha ao atualizar status:", error);
         } finally {
@@ -114,6 +117,7 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
       if (result.success) {
         form.reset();
         router.refresh();
+        window.location.reload();
       } else {
         alert(`Erro: ${result.message}`);
       }
@@ -125,7 +129,6 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
       
         const originalComments = complaint.comments;
       
-        // Optimistic UI update
         setComplaint(prevComplaint => ({
           ...prevComplaint,
           comments: prevComplaint.comments.map(c => {
@@ -144,14 +147,13 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
         const result = await likeComment(complaint.id, commentId);
         
         if (!result.success) {
-          // Revert UI on failure
           setComplaint(prevComplaint => ({
               ...prevComplaint,
               comments: originalComments
           }));
           alert(result.message);
         } else {
-          router.refresh(); // Re-fetch data to ensure consistency
+          router.refresh();
         }
         
         setLikingComment(null);
@@ -313,7 +315,40 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
                                         <UserCircle className="h-10 w-10 text-gray-400" />
                                     )}
                                     <div className="flex-1">
+                                    <div className="flex justify-between items-center">
                                         <span className="font-semibold text-sm">{comment.user.name}</span>
+                                            {session?.user?.id === String(comment.user.id) &&
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Esta ação não pode ser desfeita. Isso irá deletar permanentemente o seu comentário.
+                                                        </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={async () => {
+                                                            const result = await deleteUserComment(comment.id);
+                                                            if (result.success) {
+                                                                setComplaint(prev => ({
+                                                                    ...prev,
+                                                                    comments: prev.comments.filter(c => c.id !== comment.id)
+                                                                }))
+                                                            } else {
+                                                                alert(result.message)
+                                                            }
+                                                        }}>Deletar</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            }
+                                        </div>
                                         <p className="text-muted-foreground bg-gray-50 p-2 rounded-md mt-1 text-sm">{comment.text}</p>
                                         <div className="flex items-center gap-2 mt-2">
                                             <Button 

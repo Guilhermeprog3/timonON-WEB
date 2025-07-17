@@ -31,6 +31,7 @@ export interface ApiComment {
     id: number;
     text: string;
     user: {
+        id: number;
         name: string;
         avatarUrl?: string;
     };
@@ -42,6 +43,7 @@ export interface Comment {
     id: number;
     text: string;
     user: {
+        id: number;
         name: string;
         avatarUrl?: string;
     };
