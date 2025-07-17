@@ -302,7 +302,7 @@ export default function AboutPage(): JSX.Element {
               <div className="space-y-4 text-white/90">
                 <p className="font-bold text-xl">Um Projeto de Extensão do IFMA - Campus Timon</p>
                 <p>
-                  O Zelus é fruto de um projeto de extensão idealizado e desenvolvido por estudantes do curso de Análise e Desenvolvimento de Sistemas. Esta iniciativa reflete o compromisso do Instituto Federal do Maranhão com a inovação e a aplicação prática do conhecimento em benefício da comunidade.
+                  O Zelus é fruto de um projeto de extensão idealizado e desenvolvido por estudantes do curso de Sistemas Para Internet. Esta iniciativa reflete o compromisso do Instituto Federal do Maranhão com a inovação e a aplicação prática do conhecimento em benefício da comunidade.
                 </p>
                 <p>
                   Agradecemos à Prefeitura de Timon pela valiosa parceria, que foi fundamental para transformar este projeto acadêmico em uma ferramenta real para a cidadania.
