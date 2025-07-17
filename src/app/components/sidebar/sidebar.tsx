@@ -10,6 +10,7 @@ import {
   Building,
   Image as ImageIcon,
   ClipboardList,
+  Info,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -76,7 +77,13 @@ const allItems = [
         roles: ['SUPERADMIN']
     },
     {
-        title: 'Configuração',
+        title: 'Sobre',
+        url: '/about',
+        icon: Info,
+        roles: ['SUPERADMIN', 'ADMIN']
+    },
+    {
+        title: 'Configurações',
         url: '/settings',
         icon: Settings,
         roles: ['SUPERADMIN', 'ADMIN']
