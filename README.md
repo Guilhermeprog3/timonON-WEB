@@ -8,7 +8,7 @@ Este repositório contém o front-end do sistema administrativo da Prefeitura de
 
 ## 🚀 Tecnologias Utilizadas
 
-- **React.js** com **Next.js**
+- **React.js** com **Next.js** 
 - **TypeScript**
 - **shadcn/ui** para componentes visuais
 - **NextAuth.js** com autenticação via **JWT**
