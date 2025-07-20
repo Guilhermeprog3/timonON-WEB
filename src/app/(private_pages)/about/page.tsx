@@ -296,7 +296,7 @@ export default function AboutPage(): JSX.Element {
                   alt="Logo do IFMA"
                   width={150}
                   height={85}
-                  className="object-contain rounded-lg drop-shadow-[0_2px_5px_rgba(255,255,255,0.4)]"
+                  className="object-contain rounded-lg"
                 />
               </div>
               <div className="space-y-4 text-white/90">
