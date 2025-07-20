@@ -337,7 +337,7 @@ export function ComplaintDetails({ complaint: initialComplaint }: ComplaintDetai
                                                         <AlertDialogHeader>
                                                         <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            Esta ação não pode ser desfeita. Isso irá deletar permanentemente o seu comentário.
+                                                            Esta ação não pode ser desfeita. Isso irá deletar permanentemente este comentário.
                                                         </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
